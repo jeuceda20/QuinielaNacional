@@ -739,10 +739,10 @@ El proyecto busca demostrar que una aplicación comunitaria puede ser segura, ag
 
 ## Desarrollo local
 
-La base de desarrollo se ejecuta de forma aislada en Docker y usa el puerto `5433`, por lo que no modifica instalaciones locales de PostgreSQL.
+Las bases de desarrollo y testing se ejecutan de forma aislada en Docker, usando respectivamente los puertos `5433` y `5434`, por lo que no modifican instalaciones locales de PostgreSQL.
 
 1. Copia `.env.example` a `.env.local` y completa las variables locales.
-2. Ejecuta `npm run db:up` para iniciar PostgreSQL.
+2. Ejecuta `npm run db:up` para iniciar ambas bases PostgreSQL.
 3. Ejecuta `npm run db:down` para detener el contenedor sin eliminar sus datos.
 
 Las credenciales locales y `DATABASE_URL` permanecen únicamente en `.env.local`, que no se versiona.

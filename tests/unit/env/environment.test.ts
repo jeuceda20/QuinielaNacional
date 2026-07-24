@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 
 import { EnvironmentValidationError, validateEnvironment } from "@/lib/env/environment";
 
@@ -21,9 +20,9 @@ describe("validateEnvironment", () => {
   it("parses typed values and disables omitted feature flags", () => {
     const environment = validateEnvironment(validEnvironment);
 
-    assert.equal(environment.SMTP_PORT, 1025);
-    assert.equal(environment.ENABLE_DIAGNOSTICS, false);
-    assert.equal(environment.ENABLE_SQL_CONSOLE, false);
+    expect(environment.SMTP_PORT).toBe(1025);
+    expect(environment.ENABLE_DIAGNOSTICS).toBe(false);
+    expect(environment.ENABLE_SQL_CONSOLE).toBe(false);
   });
 
   it("reports invalid variable names without exposing their values", () => {
@@ -34,15 +33,14 @@ describe("validateEnvironment", () => {
     };
     delete invalidEnvironment.SMTP_HOST;
 
-    assert.throws(
-      () => validateEnvironment(invalidEnvironment),
-      (error: unknown) => {
-        assert.ok(error instanceof EnvironmentValidationError);
-        assert.deepEqual(error.variableNames, ["SMTP_HOST"]);
-        assert.doesNotMatch(error.message, new RegExp(secretValue));
+    expect(() => validateEnvironment(invalidEnvironment)).toThrow(EnvironmentValidationError);
 
-        return true;
-      },
-    );
+    try {
+      validateEnvironment(invalidEnvironment);
+    } catch (error) {
+      expect(error).toBeInstanceOf(EnvironmentValidationError);
+      expect((error as EnvironmentValidationError).variableNames).toEqual(["SMTP_HOST"]);
+      expect((error as Error).message).not.toContain(secretValue);
+    }
   });
 });

@@ -13,8 +13,14 @@
     "prisma:migrate": "prisma migrate dev",
     "db:up": "docker compose --env-file .env.local up -d",
     "db:down": "docker compose --env-file .env.local down",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"*.{js,mjs,json,ts,yaml,yml}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"*.{js,mjs,json,ts,yaml,yml}\""
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e": "npm run build && node scripts/run-e2e.mjs",
+    "test:e2e:ui": "npm run build && node scripts/run-e2e.mjs --ui",
+    "test:all": "npm run test && npm run test:integration && npm run test:e2e",
+    "format": "prettier --write \"scripts/**/*.{js,mjs}\" \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"*.{js,mjs,json,ts,yaml,yml}\"",
+    "format:check": "prettier --check \"scripts/**/*.{js,mjs}\" \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,tsx}\" \"*.{js,mjs,json,ts,yaml,yml}\""
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.0",
@@ -26,6 +32,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",
@@ -39,6 +46,7 @@
     "prettier": "^3.9.6",
     "prisma": "^7.9.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
