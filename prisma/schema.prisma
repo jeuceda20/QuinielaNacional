@@ -55,6 +55,92 @@ enum PredictionScoreType {
   NO_PREDICTION
 }
 
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  USER_REGISTERED
+  USER_APPROVED
+  USER_REJECTED
+  USER_BLOCKED
+  USER_UNBLOCKED
+  USER_DISABLED
+  USER_ROLE_CHANGED
+  SEASON_CREATED
+  SEASON_UPDATED
+  SEASON_ACTIVATED
+  SEASON_CLOSED
+  ROUND_CREATED
+  ROUND_UPDATED
+  ROUND_ARCHIVED
+  MATCH_CREATED
+  MATCH_UPDATED
+  MATCH_RESCHEDULED
+  MATCH_SUSPENDED
+  MATCH_RESUMED
+  MATCH_CANCELLED
+  MATCH_DOUBLE_CHANGED
+  MATCH_PROCESSED
+  MATCH_RESULT_CORRECTED
+  PREDICTION_CREATED
+  PREDICTION_UPDATED
+  SEASON_RECALCULATED
+  SETTINGS_UPDATED
+  MAINTENANCE_ENABLED
+  MAINTENANCE_DISABLED
+  DATA_EXPORTED
+  TEST_DATA_GENERATED
+  SQL_QUERY_EXECUTED
+  INTEGRITY_CHECK_EXECUTED
+}
+
+enum AuditEntityType {
+  USER
+  TEAM
+  SEASON
+  ROUND
+  MATCH
+  PREDICTION
+  STANDING
+  SPONSOR
+  SETTING
+  SYSTEM
+}
+
+enum NotificationType {
+  ACCOUNT_APPROVED
+  ACCOUNT_REJECTED
+  MATCH_CLOSING_SOON
+  PREDICTIONS_PENDING
+  MATCH_RESCHEDULED
+  MATCH_PROCESSED
+  SEASON_STARTED
+  SYSTEM
+}
+
+enum OperationalLockType {
+  MATCH_PROCESSING
+  SEASON_RECALCULATION
+  IMPORT
+  CRITICAL_OPERATION
+}
+
+enum RunStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum ApplicationSettingKey {
+  APPLICATION_NAME
+  APPLICATION_LOGO_PATH
+  APPLICATION_MAINTENANCE_MODE
+  APPLICATION_HOW_IT_WORKS
+  APPLICATION_SOCIAL_LINKS
+  DIAGNOSTICS_ENABLED
+}
+
 model User {
   id                 String     @id @default(uuid()) @db.Uuid
   firstName          String     @db.VarChar(100)
@@ -83,15 +169,19 @@ model User {
 
   approvedBy                  User?                    @relation("UserApprovedBy", fields: [approvedById], references: [id])
   approvedUsers               User[]                   @relation("UserApprovedBy")
+  auditLogs                   AuditLog[]
   blockedBy                   User?                    @relation("UserBlockedBy", fields: [blockedById], references: [id])
   blockedUsers                User[]                   @relation("UserBlockedBy")
   closedSeasons               Season[]                 @relation("SeasonClosedBy")
   emailVerificationTokens     EmailVerificationToken[]
+  exportRuns                  ExportRun[]              @relation("ExportRunRequestedBy")
   favoriteTeam                Team?                    @relation("FavoriteTeam", fields: [favoriteTeamId], references: [id], onDelete: SetNull)
   matchScheduleChanges        MatchScheduleHistory[]   @relation("MatchScheduleChangedBy")
   matchesProcessed            Match[]                  @relation("MatchProcessedBy")
   matchesProcessing           Match[]                  @relation("MatchProcessingStartedBy")
   matchResultsRecorded        MatchResult[]            @relation("MatchResultRecordedBy")
+  notifications               Notification[]
+  operationalLocks            OperationalLock[]        @relation("OperationalLockAcquiredBy")
   passwordResetTokens         PasswordResetToken[]
   predictions                 Prediction[]
   predictionScores            PredictionScore[]
@@ -105,6 +195,8 @@ model User {
   sessions                    Session[]
   standings                   Standing[]
   standingSnapshots           StandingSnapshot[]
+  diagnosticRuns              DiagnosticRun[]          @relation("DiagnosticRunExecutedBy")
+  updatedSettings             ApplicationSetting[]     @relation("ApplicationSettingUpdatedBy")
 
   @@index([status])
   @@index([role])
@@ -445,4 +537,138 @@ model StandingSnapshot {
   @@index([seasonId, createdAt])
   @@index([userId, createdAt])
   @@index([triggerMatchId])
+}
+
+model AuditLog {
+  id           String          @id @default(uuid()) @db.Uuid
+  actorUserId  String?         @db.Uuid
+  actorRole    UserRole?
+  action       AuditAction
+  entityType   AuditEntityType
+  entityId     String?         @db.Uuid
+  beforeJson   Json?           @db.JsonB
+  afterJson    Json?           @db.JsonB
+  metadataJson Json?           @db.JsonB
+  ipAddress    String?         @db.VarChar(64)
+  userAgent    String?         @db.VarChar(500)
+  requestId    String?         @db.VarChar(100)
+  createdAt    DateTime        @default(now()) @db.Timestamptz(6)
+
+  actorUser User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId])
+  @@index([action])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@index([requestId])
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  title     String           @db.VarChar(150)
+  message   String           @db.VarChar(1000)
+  link      String?          @db.VarChar(500)
+  dataJson  Json?            @db.JsonB
+  readAt    DateTime?        @db.Timestamptz(6)
+  expiresAt DateTime?        @db.Timestamptz(6)
+  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
+  @@index([expiresAt])
+}
+
+model Sponsor {
+  id           String    @id @default(uuid()) @db.Uuid
+  name         String    @db.VarChar(150)
+  imagePath    String?   @db.VarChar(500)
+  targetUrl    String?   @db.VarChar(500)
+  isActive     Boolean   @default(true)
+  displayOrder Int
+  startsAt     DateTime? @db.Timestamptz(6)
+  endsAt       DateTime? @db.Timestamptz(6)
+  createdAt    DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @db.Timestamptz(6)
+  deletedAt    DateTime? @db.Timestamptz(6)
+
+  @@index([isActive])
+  @@index([displayOrder])
+}
+
+model ApplicationSetting {
+  id          String                @id @default(uuid()) @db.Uuid
+  key         ApplicationSettingKey @unique
+  valueJson   Json                  @db.JsonB
+  description String?               @db.VarChar(500)
+  isPublic    Boolean               @default(false)
+  updatedById String?               @db.Uuid
+  createdAt   DateTime              @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime              @updatedAt @db.Timestamptz(6)
+
+  updatedBy User? @relation("ApplicationSettingUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@index([isPublic])
+}
+
+model OperationalLock {
+  id           String              @id @default(uuid()) @db.Uuid
+  lockType     OperationalLockType
+  resourceKey  String              @db.VarChar(200)
+  acquiredById String?             @db.Uuid
+  requestId    String?             @db.VarChar(100)
+  acquiredAt   DateTime            @default(now()) @db.Timestamptz(6)
+  expiresAt    DateTime            @db.Timestamptz(6)
+  releasedAt   DateTime?           @db.Timestamptz(6)
+
+  acquiredBy User? @relation("OperationalLockAcquiredBy", fields: [acquiredById], references: [id], onDelete: SetNull)
+
+  @@unique([lockType, resourceKey])
+  @@index([expiresAt])
+  @@index([requestId])
+}
+
+model DiagnosticRun {
+  id             String    @id @default(uuid()) @db.Uuid
+  type           String    @db.VarChar(100)
+  executedById   String?   @db.Uuid
+  status         RunStatus @default(PENDING)
+  summaryJson    Json?     @db.JsonB
+  sanitizedError String?   @db.VarChar(1000)
+  requestId      String?   @db.VarChar(100)
+  startedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  completedAt    DateTime? @db.Timestamptz(6)
+
+  executedBy User? @relation("DiagnosticRunExecutedBy", fields: [executedById], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([startedAt])
+  @@index([requestId])
+}
+
+model ExportRun {
+  id             String    @id @default(uuid()) @db.Uuid
+  requestedById  String?   @db.Uuid
+  exportType     String    @db.VarChar(100)
+  format         String    @db.VarChar(20)
+  status         RunStatus @default(PENDING)
+  rowCount       Int?
+  storageKey     String?   @db.VarChar(500)
+  expiresAt      DateTime? @db.Timestamptz(6)
+  summaryJson    Json?     @db.JsonB
+  sanitizedError String?   @db.VarChar(1000)
+  requestId      String?   @db.VarChar(100)
+  startedAt      DateTime  @default(now()) @db.Timestamptz(6)
+  completedAt    DateTime? @db.Timestamptz(6)
+
+  requestedBy User? @relation("ExportRunRequestedBy", fields: [requestedById], references: [id], onDelete: SetNull)
+
+  @@index([requestedById])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([requestId])
 }
