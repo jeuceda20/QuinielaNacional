@@ -94,6 +94,19 @@ export function canPromoteAdmin(actor: AuthorizationActor, target: Authorization
   );
 }
 
+export function canManageAdministratorRole(
+  actor: AuthorizationActor,
+  target: AuthorizationTarget,
+  newRole: AuthorizationRole.USER | AuthorizationRole.ADMIN,
+): boolean {
+  if (!isApprovedSuperAdministrator(actor) || target.status !== AuthorizationAccountStatus.APPROVED)
+    return false;
+  return (
+    (target.role === AuthorizationRole.USER && newRole === AuthorizationRole.ADMIN) ||
+    (target.role === AuthorizationRole.ADMIN && newRole === AuthorizationRole.USER)
+  );
+}
+
 export function canUseDiagnostics(actor: AuthorizationActor, diagnosticsEnabled: boolean): boolean {
   return isApprovedSuperAdministrator(actor) && diagnosticsEnabled;
 }
