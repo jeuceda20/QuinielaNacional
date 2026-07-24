@@ -25,6 +25,14 @@ export type AuthorizationTarget = Readonly<{
   status: AuthorizationAccountStatus;
 }>;
 
+export enum UserLifecycleAction {
+  REJECT = "REJECT",
+  BLOCK = "BLOCK",
+  UNBLOCK = "UNBLOCK",
+  DISABLE = "DISABLE",
+  ENABLE = "ENABLE",
+}
+
 function isApprovedAdministrator(actor: AuthorizationActor): boolean {
   return (
     actor.status === AuthorizationAccountStatus.APPROVED &&
@@ -43,6 +51,27 @@ export function canApproveUser(actor: AuthorizationActor, target: AuthorizationT
   return (
     isApprovedAdministrator(actor) && target.status === AuthorizationAccountStatus.PENDING_APPROVAL
   );
+}
+
+export function canManageUserLifecycle(
+  actor: AuthorizationActor,
+  target: AuthorizationTarget,
+  action: UserLifecycleAction,
+): boolean {
+  if (!isApprovedAdministrator(actor)) return false;
+  if (actor.role === AuthorizationRole.ADMIN && target.role === AuthorizationRole.SUPER_ADMIN)
+    return false;
+  switch (action) {
+    case UserLifecycleAction.REJECT:
+      return target.status === AuthorizationAccountStatus.PENDING_APPROVAL;
+    case UserLifecycleAction.BLOCK:
+    case UserLifecycleAction.DISABLE:
+      return target.status === AuthorizationAccountStatus.APPROVED;
+    case UserLifecycleAction.UNBLOCK:
+      return target.status === AuthorizationAccountStatus.BLOCKED;
+    case UserLifecycleAction.ENABLE:
+      return target.status === AuthorizationAccountStatus.DISABLED;
+  }
 }
 
 export function canManageMatch(actor: AuthorizationActor, matchStatus: MatchStatus): boolean {
