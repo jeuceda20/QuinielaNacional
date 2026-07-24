@@ -736,3 +736,13 @@ Nombre interno: Kickoff
 Quiniela Nacional La Goleada es una plataforma creada para que amigos y aficionados al fútbol hondureño disfruten cada jornada compitiendo mediante pronósticos, transparencia y una experiencia moderna.
 
 El proyecto busca demostrar que una aplicación comunitaria puede ser segura, agradable y profesional sin depender de servicios de pago.
+
+## Desarrollo local
+
+La base de desarrollo se ejecuta de forma aislada en Docker y usa el puerto `5433`, por lo que no modifica instalaciones locales de PostgreSQL.
+
+1. Copia `.env.example` a `.env.local` y completa las variables locales.
+2. Ejecuta `npm run db:up` para iniciar PostgreSQL.
+3. Ejecuta `npm run db:down` para detener el contenedor sin eliminar sus datos.
+
+Las credenciales locales y `DATABASE_URL` permanecen únicamente en `.env.local`, que no se versiona.
