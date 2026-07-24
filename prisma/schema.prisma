@@ -48,6 +48,13 @@ enum MatchStatus {
   CANCELLED
 }
 
+enum PredictionScoreType {
+  EXACT
+  PARTIAL
+  WRONG
+  NO_PREDICTION
+}
+
 model User {
   id                 String     @id @default(uuid()) @db.Uuid
   firstName          String     @db.VarChar(100)
@@ -84,7 +91,11 @@ model User {
   matchScheduleChanges        MatchScheduleHistory[]   @relation("MatchScheduleChangedBy")
   matchesProcessed            Match[]                  @relation("MatchProcessedBy")
   matchesProcessing           Match[]                  @relation("MatchProcessingStartedBy")
+  matchResultsRecorded        MatchResult[]            @relation("MatchResultRecordedBy")
   passwordResetTokens         PasswordResetToken[]
+  predictions                 Prediction[]
+  predictionScores            PredictionScore[]
+  predictionScoresCalculated  PredictionScore[]        @relation("PredictionScoreCalculatedBy")
   rejectedBy                  User?                    @relation("UserRejectedBy", fields: [rejectedById], references: [id])
   rejectedUsers               User[]                   @relation("UserRejectedBy")
   roleChanges                 RoleHistory[]            @relation("RoleHistoryUser")
@@ -92,6 +103,8 @@ model User {
   seasonParticipantExclusions SeasonParticipant[]      @relation("SeasonParticipantExcludedBy")
   seasonParticipations        SeasonParticipant[]
   sessions                    Session[]
+  standings                   Standing[]
+  standingSnapshots           StandingSnapshot[]
 
   @@index([status])
   @@index([role])
@@ -201,10 +214,13 @@ model Season {
   updatedAt              DateTime     @updatedAt @db.Timestamptz(6)
   archivedAt             DateTime?    @db.Timestamptz(6)
 
-  closedBy     User?               @relation("SeasonClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
-  matches      Match[]
-  participants SeasonParticipant[]
-  rounds       Round[]
+  closedBy          User?               @relation("SeasonClosedBy", fields: [closedById], references: [id], onDelete: Restrict)
+  matches           Match[]
+  participants      SeasonParticipant[]
+  predictionScores  PredictionScore[]
+  rounds            Round[]
+  standingSnapshots StandingSnapshot[]
+  standings         Standing[]
 
   @@index([status])
 }
@@ -279,8 +295,12 @@ model Match {
   processedBy         User?                  @relation("MatchProcessedBy", fields: [processedById], references: [id], onDelete: Restrict)
   processingStartedBy User?                  @relation("MatchProcessingStartedBy", fields: [processingStartedById], references: [id], onDelete: Restrict)
   round               Round                  @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  results             MatchResult[]
+  predictions         Prediction[]
+  predictionScores    PredictionScore[]
   scheduleHistory     MatchScheduleHistory[]
   season              Season                 @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  standingSnapshots   StandingSnapshot[]     @relation("StandingSnapshotTriggerMatch")
 
   @@index([seasonId])
   @@index([roundId])
@@ -308,4 +328,121 @@ model MatchScheduleHistory {
 
   @@index([matchId])
   @@index([changedById])
+}
+
+model Prediction {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  matchId     String    @db.Uuid
+  homeGoals   Int
+  awayGoals   Int
+  submittedAt DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt @db.Timestamptz(6)
+  lockedAt    DateTime? @db.Timestamptz(6)
+  source      String?   @db.VarChar(30)
+  isTestData  Boolean   @default(false)
+  deletedAt   DateTime? @db.Timestamptz(6)
+
+  match  Match             @relation(fields: [matchId], references: [id], onDelete: Restrict)
+  scores PredictionScore[]
+  user   User              @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, matchId])
+  @@index([matchId])
+  @@index([submittedAt])
+}
+
+model MatchResult {
+  id               String   @id @default(uuid()) @db.Uuid
+  matchId          String   @db.Uuid
+  homeGoals        Int
+  awayGoals        Int
+  version          Int
+  isCurrent        Boolean  @default(true)
+  recordedById     String   @db.Uuid
+  correctionReason String?  @db.VarChar(500)
+  createdAt        DateTime @default(now()) @db.Timestamptz(6)
+
+  match      Match             @relation(fields: [matchId], references: [id], onDelete: Restrict)
+  scores     PredictionScore[]
+  recordedBy User              @relation("MatchResultRecordedBy", fields: [recordedById], references: [id], onDelete: Restrict)
+
+  @@unique([matchId, version])
+  @@index([matchId])
+  @@index([recordedById])
+}
+
+model PredictionScore {
+  id             String              @id @default(uuid()) @db.Uuid
+  seasonId       String              @db.Uuid
+  userId         String              @db.Uuid
+  matchId        String              @db.Uuid
+  predictionId   String?             @db.Uuid
+  matchResultId  String              @db.Uuid
+  scoreType      PredictionScoreType
+  basePoints     Int
+  multiplier     Int
+  awardedPoints  Int
+  resultVersion  Int
+  calculatedAt   DateTime            @default(now()) @db.Timestamptz(6)
+  calculatedById String?             @db.Uuid
+
+  calculatedBy User?       @relation("PredictionScoreCalculatedBy", fields: [calculatedById], references: [id], onDelete: Restrict)
+  match        Match       @relation(fields: [matchId], references: [id], onDelete: Restrict)
+  matchResult  MatchResult @relation(fields: [matchResultId], references: [id], onDelete: Restrict)
+  prediction   Prediction? @relation(fields: [predictionId], references: [id], onDelete: Restrict)
+  season       Season      @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, matchId, resultVersion])
+  @@index([seasonId])
+  @@index([matchId])
+  @@index([scoreType])
+  @@index([predictionId])
+  @@index([matchResultId])
+}
+
+model Standing {
+  id                String   @id @default(uuid()) @db.Uuid
+  seasonId          String   @db.Uuid
+  userId            String   @db.Uuid
+  position          Int
+  previousPosition  Int?
+  totalPoints       Int      @default(0)
+  exactCount        Int      @default(0)
+  partialCount      Int      @default(0)
+  wrongCount        Int      @default(0)
+  noPredictionCount Int      @default(0)
+  matchesScored     Int      @default(0)
+  recalculatedAt    DateTime @default(now()) @db.Timestamptz(6)
+  version           Int      @default(1)
+
+  season Season @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([seasonId, userId])
+  @@index([seasonId, position])
+  @@index([seasonId, totalPoints, exactCount])
+}
+
+model StandingSnapshot {
+  id              String   @id @default(uuid()) @db.Uuid
+  seasonId        String   @db.Uuid
+  userId          String   @db.Uuid
+  triggerMatchId  String?  @db.Uuid
+  position        Int
+  totalPoints     Int      @default(0)
+  exactCount      Int      @default(0)
+  partialCount    Int      @default(0)
+  snapshotVersion Int
+  createdAt       DateTime @default(now()) @db.Timestamptz(6)
+
+  season       Season @relation(fields: [seasonId], references: [id], onDelete: Restrict)
+  triggerMatch Match? @relation("StandingSnapshotTriggerMatch", fields: [triggerMatchId], references: [id], onDelete: Restrict)
+  user         User   @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([seasonId, userId, snapshotVersion])
+  @@index([seasonId, createdAt])
+  @@index([userId, createdAt])
+  @@index([triggerMatchId])
 }
