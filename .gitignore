@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Production builds and coverage
+dist/
+build/
+coverage/
+
+# Test artifacts
+playwright-report/
+test-results/
+blob-report/
+
+# Environment files and local secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Prisma local development files
+prisma/*.db
+prisma/*.db-journal
+
+# Logs and diagnostic files
+*.log
+logs/
+
+# Local tooling and operating system files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.tsbuildinfo
