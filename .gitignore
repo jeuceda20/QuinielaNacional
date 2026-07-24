@@ -33,6 +33,7 @@ blob-report/
 # Prisma local development files
 prisma/*.db
 prisma/*.db-journal
+src/generated/prisma/
 
 # Logs and diagnostic files
 *.log
