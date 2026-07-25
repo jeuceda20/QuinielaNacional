@@ -1,4 +1,5 @@
 import type { ProcessMatchResultRepository } from "@/modules/results/application/process-match-result";
+import { isSameOfficialResult } from "@/modules/results/domain/official-result-idempotency";
 import { isConcurrentLockError } from "@/modules/results/infrastructure/operational-lock";
 import {
   calculatePredictionScore,
@@ -50,7 +51,15 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
         });
         if (!match) return "MATCH_NOT_FOUND" as const;
         if (match.status === "CANCELLED") return "MATCH_CANCELLED" as const;
-        if (match.status === "PROCESSED") return "MATCH_ALREADY_PROCESSED" as const;
+        if (match.status === "PROCESSED") {
+          const currentResult = await tx.matchResult.findFirst({
+            where: { matchId: match.id, isCurrent: true },
+            select: { homeGoals: true, awayGoals: true },
+          });
+          if (currentResult && isSameOfficialResult(currentResult, input))
+            return "PROCESSED" as const;
+          return "MATCH_ALREADY_PROCESSED" as const;
+        }
         if (match.status !== "FINISHED_PENDING") return "MATCH_NOT_READY" as const;
 
         const result = await tx.matchResult.create({

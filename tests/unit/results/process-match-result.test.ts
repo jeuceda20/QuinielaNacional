@@ -50,6 +50,16 @@ describe("ProcessMatchResultService", () => {
     ).rejects.toThrow("CONCURRENT_PROCESSING");
   });
 
+  it("accepts a repeated request when the official result is identical", async () => {
+    const repository = { process: vi.fn().mockResolvedValue("PROCESSED") };
+    const service = new ProcessMatchResultService(repository);
+
+    await service.execute(context, input, new Date());
+    await service.execute(context, input, new Date());
+
+    expect(repository.process).toHaveBeenCalledTimes(2);
+  });
+
   it("rejects decimal and negative official results", () => {
     expect(() => processMatchResultSchema.parse({ ...input, homeGoals: 1.5 })).toThrow();
     expect(() => processMatchResultSchema.parse({ ...input, awayGoals: -1 })).toThrow();
