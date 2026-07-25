@@ -12,6 +12,9 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
             Quiniela Nacional
           </Link>
           <div className="flex items-center gap-3 text-sm font-medium">
+            <Link href="/dashboard" className="rounded-md px-3 py-2 hover:bg-slate-100">
+              Dashboard
+            </Link>
             <Link href="/standings" className="rounded-md px-3 py-2 hover:bg-slate-100">
               Clasificación
             </Link>
