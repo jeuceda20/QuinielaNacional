@@ -4,9 +4,11 @@ import { redirect } from "next/navigation";
 import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
 import { GetPendingPredictions } from "@/modules/predictions/application/get-pending-predictions";
+import { disablePrivatePredictionCache } from "@/modules/predictions/infrastructure/prediction-cache";
 import { PrismaPendingPredictionRepository } from "@/modules/predictions/infrastructure/prisma-pending-prediction-repository";
 import { PredictionForm } from "@/modules/predictions/ui/prediction-form";
 export default async function PredictionsPage() {
+  disablePrivatePredictionCache();
   const t = (await cookies()).get("session")?.value,
     s = t ? await new SessionService(new PrismaSessionRepository()).validate(t, new Date()) : null;
   if (!s) redirect("/login");
