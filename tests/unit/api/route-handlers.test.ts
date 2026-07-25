@@ -19,6 +19,8 @@ const mocks = vi.hoisted(() => ({
   userFindFirst: vi.fn(),
   getClosesAt: vi.fn(),
   getOwnPrediction: vi.fn(),
+  listResults: vi.fn(),
+  listStandings: vi.fn(),
 }));
 
 vi.mock("@/lib/api/session", () => ({
@@ -58,6 +60,16 @@ vi.mock("@/modules/predictions/infrastructure/prisma-prediction-visibility-repos
   PrismaPredictionVisibilityRepository: class {
     getClosesAt = mocks.getClosesAt;
     getOwn = mocks.getOwnPrediction;
+  },
+}));
+vi.mock("@/modules/standings/infrastructure/prisma-public-standings-repository", () => ({
+  PrismaPublicStandingsRepository: class {
+    list = mocks.listStandings;
+  },
+}));
+vi.mock("@/modules/results/infrastructure/prisma-public-results-repository", () => ({
+  PrismaPublicResultsRepository: class {
+    list = mocks.listResults;
   },
 }));
 vi.mock("@/modules/auth/application/confirm-email", () => ({
@@ -102,6 +114,8 @@ import { GET as getOwnPrediction } from "@/app/api/v1/matches/[matchId]/predicti
 import { GET as getVisiblePredictions } from "@/app/api/v1/matches/[matchId]/predictions/route";
 import { GET as getPublicConfig } from "@/app/api/v1/public/config/route";
 import { GET as getPublicTeams } from "@/app/api/v1/public/teams/route";
+import { GET as getResults } from "@/app/api/v1/results/route";
+import { GET as getStandings } from "@/app/api/v1/standings/route";
 
 const request = (path: string) => new NextRequest(`https://app.example.invalid${path}`);
 
@@ -119,6 +133,8 @@ describe("API route handlers", () => {
     mocks.userFindFirst.mockReset();
     mocks.getClosesAt.mockReset();
     mocks.getOwnPrediction.mockReset();
+    mocks.listResults.mockReset();
+    mocks.listStandings.mockReset();
     mocks.revalidatePredictionCaches.mockReset();
     mocks.savePrediction.mockReset();
     mocks.auditCount.mockReset();
@@ -345,6 +361,19 @@ describe("API route handlers", () => {
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toMatchObject({
       error: { code: "PREDICTION_NOT_VISIBLE" },
+    });
+  });
+
+  it("returns public standings and processed results through their DTO contracts", async () => {
+    mocks.listStandings.mockResolvedValue([{ position: 1, nickname: "ana", totalPoints: 3 }]);
+    mocks.listResults.mockResolvedValue([{ id: "match-id", officialResult: "2-1", rows: [] }]);
+    await expect((await getStandings()).json()).resolves.toEqual({
+      success: true,
+      data: [{ position: 1, nickname: "ana", totalPoints: 3 }],
+    });
+    await expect((await getResults()).json()).resolves.toEqual({
+      success: true,
+      data: [{ id: "match-id", officialResult: "2-1", rows: [] }],
     });
   });
 
