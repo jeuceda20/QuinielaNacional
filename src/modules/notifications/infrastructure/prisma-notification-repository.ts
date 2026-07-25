@@ -18,4 +18,19 @@ export class PrismaNotificationRepository implements NotificationRepository {
     });
     return result.count === 1;
   }
+  async markAllAsRead(userId: string, now: Date) {
+    await this.database.notification.updateMany({
+      where: { userId, readAt: null },
+      data: { readAt: now },
+    });
+  }
+  list(userId: string, page: number, pageSize: number) {
+    return this.database.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      select: { id: true, title: true, message: true, link: true, readAt: true, createdAt: true },
+    });
+  }
 }
