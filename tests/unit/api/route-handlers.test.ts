@@ -99,6 +99,7 @@ import { POST as verifyEmail } from "@/app/api/v1/auth/verify-email/route";
 import { GET as getHealth } from "@/app/api/v1/health/route";
 import { PUT as savePrediction } from "@/app/api/v1/matches/[matchId]/prediction/route";
 import { GET as getOwnPrediction } from "@/app/api/v1/matches/[matchId]/prediction/route";
+import { GET as getVisiblePredictions } from "@/app/api/v1/matches/[matchId]/predictions/route";
 import { GET as getPublicConfig } from "@/app/api/v1/public/config/route";
 import { GET as getPublicTeams } from "@/app/api/v1/public/teams/route";
 
@@ -328,6 +329,22 @@ describe("API route handlers", () => {
     await expect(response.json()).resolves.toEqual({
       success: true,
       data: { userId: "user-id", homeGoals: 2, awayGoals: 1 },
+    });
+  });
+
+  it("does not expose other predictions before the closing time", async () => {
+    const matchId = "b105eeea-0e6e-4f29-9d95-6c772c47bb7d";
+    mocks.getApiSession.mockResolvedValue({ user: { id: "user-id", role: "USER" } });
+    mocks.getClosesAt.mockResolvedValue(new Date(Date.now() + 60000));
+    const response = await getVisiblePredictions(
+      request(`/api/v1/matches/${matchId}/predictions`),
+      {
+        params: Promise.resolve({ matchId }),
+      },
+    );
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "PREDICTION_NOT_VISIBLE" },
     });
   });
 
