@@ -38,6 +38,7 @@ export async function processResultAction(formData: FormData) {
     new Date(),
   );
   revalidatePath("/admin/matches");
+  revalidatePath("/standings");
   return {
     durationMilliseconds: Date.now() - startedAt,
     predictionCount,
