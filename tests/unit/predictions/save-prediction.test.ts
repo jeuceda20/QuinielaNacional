@@ -30,4 +30,26 @@ describe("SavePredictionService", () => {
       new SavePredictionService(r).execute(createRequestContext({ userId: "u" }), i, new Date()),
     ).rejects.toThrow("MATCH_CLOSED");
   });
+
+  it("edits an existing prediction through the same save service", async () => {
+    const repository = { save: vi.fn().mockResolvedValue("SAVED") };
+    const service = new SavePredictionService(repository);
+    const context = createRequestContext({ userId: "user-id", role: "USER" });
+    await service.execute(context, { ...i, homeGoals: 2, awayGoals: 1 }, new Date());
+    await service.execute(context, { ...i, homeGoals: 1, awayGoals: 2 }, new Date());
+    expect(repository.save).toHaveBeenLastCalledWith(
+      expect.objectContaining({ userId: "user-id", homeGoals: 1, awayGoals: 2 }),
+    );
+  });
+
+  it("keeps the same behavior for idempotent and concurrent saves", async () => {
+    const repository = { save: vi.fn().mockResolvedValue("SAVED") };
+    const service = new SavePredictionService(repository);
+    const context = createRequestContext({ userId: "user-id", role: "USER" });
+    await Promise.all([
+      service.execute(context, i, new Date()),
+      service.execute(context, i, new Date()),
+    ]);
+    expect(repository.save).toHaveBeenCalledTimes(2);
+  });
 });
