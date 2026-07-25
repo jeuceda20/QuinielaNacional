@@ -5,10 +5,14 @@ import { Argon2PasswordHasher } from "@/modules/auth/infrastructure/argon2-passw
 import { PrismaEmailVerificationTokenRepository } from "@/modules/auth/infrastructure/prisma-email-verification-token-repository";
 import { registerInputSchema } from "@/modules/auth/schemas/register-input";
 import { GmailSmtpEmailProvider } from "@/modules/email/infrastructure/gmail-smtp-email-provider";
+import { RateLimitedEmailProvider } from "@/modules/email/infrastructure/rate-limited-email-provider";
+import { RateLimiter, rateLimitRules } from "@/modules/security/application/rate-limiter";
+import { PrismaRateLimitRepository } from "@/modules/security/infrastructure/prisma-rate-limit-repository";
 import { PrismaTeamRepository } from "@/modules/sports/infrastructure/prisma-sports-repositories";
 import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
 
 import { env } from "@/lib/env/server";
+import { getRequestIpAddress } from "@/lib/request-metadata";
 
 export type RegisterActionState = Readonly<{
   success: boolean;
@@ -37,18 +41,29 @@ export async function registerAction(
       message: "Revisa los datos ingresados.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+  const allowed = await new RateLimiter(new PrismaRateLimitRepository()).consume(
+    "registration:ip",
+    await getRequestIpAddress(),
+    rateLimitRules.registrationByIp,
+    new Date(),
+  );
+  if (!allowed)
+    return { success: false, message: "Demasiados intentos. IntÃ©ntalo nuevamente mÃ¡s tarde." };
   try {
     const service = new RegisterUser(
       new PrismaUserRepository(),
       new PrismaTeamRepository(),
       new Argon2PasswordHasher(),
       new PrismaEmailVerificationTokenRepository(),
-      new GmailSmtpEmailProvider({
-        host: env.SMTP_HOST,
-        port: env.SMTP_PORT,
-        user: env.SMTP_USER,
-        appPassword: env.SMTP_APP_PASSWORD,
-      }),
+      new RateLimitedEmailProvider(
+        new GmailSmtpEmailProvider({
+          host: env.SMTP_HOST,
+          port: env.SMTP_PORT,
+          user: env.SMTP_USER,
+          appPassword: env.SMTP_APP_PASSWORD,
+        }),
+        new RateLimiter(new PrismaRateLimitRepository()),
+      ),
       env.APP_URL,
     );
     await service.execute(parsed.data, new Date());

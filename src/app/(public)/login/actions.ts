@@ -9,7 +9,11 @@ import {
 } from "@/modules/auth/application/session-service";
 import { Argon2PasswordHasher } from "@/modules/auth/infrastructure/argon2-password-hasher";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
+import { RateLimiter, rateLimitRules } from "@/modules/security/application/rate-limiter";
+import { PrismaRateLimitRepository } from "@/modules/security/infrastructure/prisma-rate-limit-repository";
 import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
+
+import { getRequestIpAddress } from "@/lib/request-metadata";
 
 export type LoginActionState = Readonly<{
   status: "IDLE" | "INVALID" | "PENDING_EMAIL_CONFIRMATION" | "PENDING_APPROVAL";
@@ -20,20 +24,26 @@ export async function loginAction(
   _: LoginActionState,
   formData: FormData,
 ): Promise<LoginActionState> {
+  const ipAddress = await getRequestIpAddress();
   const parsed = loginInputSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
-    ipAddress: null,
+    ipAddress,
     userAgent: null,
   });
   if (!parsed.success) return { status: "INVALID", message: "Correo o contraseña incorrectos." };
   const passwords = new Argon2PasswordHasher();
   const sessionService = new SessionService(new PrismaSessionRepository());
+  const limiter = new RateLimiter(new PrismaRateLimitRepository());
   const login = new LoginUser(
     new PrismaUserRepository(),
     passwords,
     sessionService,
-    { consume: async () => true },
+    {
+      consume: async (ip, email, now) =>
+        (await limiter.consume("login:ip", ip, rateLimitRules.loginByIp, now)) &&
+        limiter.consume("login:email", email, rateLimitRules.loginByEmail, now),
+    },
     await passwords.hash("timing-placeholder-password"),
   );
   const result = await login.execute(parsed.data, new Date());

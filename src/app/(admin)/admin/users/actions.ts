@@ -7,6 +7,9 @@ import { SessionService } from "@/modules/auth/application/session-service";
 import { UserLifecycleAction } from "@/modules/auth/domain/authorization-policies";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
 import { GmailSmtpEmailProvider } from "@/modules/email/infrastructure/gmail-smtp-email-provider";
+import { RateLimitedEmailProvider } from "@/modules/email/infrastructure/rate-limited-email-provider";
+import { RateLimiter } from "@/modules/security/application/rate-limiter";
+import { PrismaRateLimitRepository } from "@/modules/security/infrastructure/prisma-rate-limit-repository";
 import { ApproveUser } from "@/modules/users/application/approve-user";
 import { ManageAdministratorRole } from "@/modules/users/application/manage-administrator-role";
 import { ManageUserLifecycle } from "@/modules/users/application/manage-user-lifecycle";
@@ -40,12 +43,15 @@ export async function adminUserAction(formData: FormData) {
     await new ApproveUser(
       new PrismaUserRepository(),
       new PrismaUserApprovalRepository(),
-      new GmailSmtpEmailProvider({
-        host: env.SMTP_HOST,
-        port: env.SMTP_PORT,
-        user: env.SMTP_USER,
-        appPassword: env.SMTP_APP_PASSWORD,
-      }),
+      new RateLimitedEmailProvider(
+        new GmailSmtpEmailProvider({
+          host: env.SMTP_HOST,
+          port: env.SMTP_PORT,
+          user: env.SMTP_USER,
+          appPassword: env.SMTP_APP_PASSWORD,
+        }),
+        new RateLimiter(new PrismaRateLimitRepository()),
+      ),
     ).execute({ ...input, addToActiveSeason: false }, new Date());
   else if (["REJECT", "BLOCK", "UNBLOCK", "DISABLE", "ENABLE"].includes(action))
     await new ManageUserLifecycle(

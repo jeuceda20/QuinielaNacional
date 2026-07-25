@@ -262,6 +262,15 @@ model PasswordResetToken {
   @@index([expiresAt])
 }
 
+model RateLimitBucket {
+  key             String   @id @db.VarChar(64)
+  windowStartedAt DateTime @db.Timestamptz(6)
+  count           Int
+  updatedAt       DateTime @updatedAt @db.Timestamptz(6)
+
+  @@index([windowStartedAt])
+}
+
 model RoleHistory {
   id           String   @id @default(uuid()) @db.Uuid
   userId       String   @db.Uuid

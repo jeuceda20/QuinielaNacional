@@ -6,6 +6,9 @@ import { PasswordRecovery } from "@/modules/auth/application/password-recovery";
 import { Argon2PasswordHasher } from "@/modules/auth/infrastructure/argon2-password-hasher";
 import { PrismaPasswordResetTokenRepository } from "@/modules/auth/infrastructure/prisma-password-reset-token-repository";
 import { GmailSmtpEmailProvider } from "@/modules/email/infrastructure/gmail-smtp-email-provider";
+import { RateLimitedEmailProvider } from "@/modules/email/infrastructure/rate-limited-email-provider";
+import { RateLimiter, rateLimitRules } from "@/modules/security/application/rate-limiter";
+import { PrismaRateLimitRepository } from "@/modules/security/infrastructure/prisma-rate-limit-repository";
 import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
 
 import { env } from "@/lib/env/server";
@@ -27,13 +30,24 @@ function createPasswordRecovery() {
     new PrismaUserRepository(),
     new PrismaPasswordResetTokenRepository(),
     new Argon2PasswordHasher(),
-    new GmailSmtpEmailProvider({
-      host: env.SMTP_HOST,
-      port: env.SMTP_PORT,
-      user: env.SMTP_USER,
-      appPassword: env.SMTP_APP_PASSWORD,
-    }),
-    { consume: async () => true },
+    new RateLimitedEmailProvider(
+      new GmailSmtpEmailProvider({
+        host: env.SMTP_HOST,
+        port: env.SMTP_PORT,
+        user: env.SMTP_USER,
+        appPassword: env.SMTP_APP_PASSWORD,
+      }),
+      new RateLimiter(new PrismaRateLimitRepository()),
+    ),
+    {
+      consume: (email, now) =>
+        new RateLimiter(new PrismaRateLimitRepository()).consume(
+          "password-recovery:email",
+          email,
+          rateLimitRules.passwordRecoveryByEmail,
+          now,
+        ),
+    },
     env.APP_URL,
     async (userId, now) => {
       await prisma.session.updateMany({
