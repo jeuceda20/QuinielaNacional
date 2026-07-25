@@ -22,6 +22,9 @@ const mocks = vi.hoisted(() => ({
   getOwnPrediction: vi.fn(),
   listResults: vi.fn(),
   listStandings: vi.fn(),
+  processMatchResult: vi.fn(),
+  recalculateSeason: vi.fn(),
+  rescheduleMatch: vi.fn(),
 }));
 
 vi.mock("@/lib/api/session", () => ({
@@ -114,6 +117,31 @@ vi.mock("@/modules/auth/infrastructure/create-auth-services", () => ({
   createRegistrationService: mocks.createRegistrationService,
   consumeRegistrationRateLimit: mocks.consumeRegistrationRateLimit,
 }));
+vi.mock("@/modules/results/application/process-match-result", () => ({
+  ProcessMatchResultService: class {
+    execute = mocks.processMatchResult;
+  },
+}));
+vi.mock("@/modules/results/infrastructure/prisma-process-match-result-repository", () => ({
+  PrismaProcessMatchResultRepository: class {},
+}));
+vi.mock("@/modules/matches/application/reschedule-match", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/modules/matches/application/reschedule-match")>()),
+  RescheduleMatch: class {
+    execute = mocks.rescheduleMatch;
+  },
+}));
+vi.mock("@/modules/matches/infrastructure/prisma-match-reschedule-repository", () => ({
+  PrismaMatchRescheduleRepository: class {},
+}));
+vi.mock("@/modules/standings/application/recalculate-season", () => ({
+  RecalculateSeasonService: class {
+    execute = mocks.recalculateSeason;
+  },
+}));
+vi.mock("@/modules/standings/infrastructure/prisma-season-recalculation-repository", () => ({
+  PrismaSeasonRecalculationRepository: class {},
+}));
 
 import { GET as getAudit } from "@/app/api/v1/admin/audit/route";
 import { POST as forgotPassword } from "@/app/api/v1/auth/forgot-password/route";
@@ -132,6 +160,9 @@ import { GET as getPublicTeams } from "@/app/api/v1/public/teams/route";
 import { GET as getResults } from "@/app/api/v1/results/route";
 import { GET as getStandings } from "@/app/api/v1/standings/route";
 import { POST as approveUser } from "@/app/api/v1/admin/users/[userId]/approve/route";
+import { POST as processMatchResult } from "@/app/api/v1/admin/matches/[matchId]/process-result/route";
+import { POST as rescheduleMatch } from "@/app/api/v1/admin/matches/[matchId]/reschedule/route";
+import { POST as recalculateSeason } from "@/app/api/v1/super-admin/seasons/[seasonId]/recalculate/route";
 
 const request = (path: string) => new NextRequest(`https://app.example.invalid${path}`);
 
@@ -151,7 +182,10 @@ describe("API route handlers", () => {
     mocks.getOwnPrediction.mockReset();
     mocks.listResults.mockReset();
     mocks.listStandings.mockReset();
+    mocks.processMatchResult.mockReset();
+    mocks.recalculateSeason.mockReset();
     mocks.revalidatePredictionCaches.mockReset();
+    mocks.rescheduleMatch.mockReset();
     mocks.savePrediction.mockReset();
     mocks.auditCount.mockReset();
     mocks.approveUser.mockReset();
@@ -401,6 +435,104 @@ describe("API route handlers", () => {
     });
     expect(response.status).toBe(403);
     expect(mocks.approveUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects result processing before parsing the body for unauthenticated requests", async () => {
+    mocks.getApiSession.mockResolvedValue(null);
+
+    const response = await processMatchResult(
+      new NextRequest("https://app.example.invalid/api/v1/admin/matches/match-id/process-result", {
+        method: "POST",
+        body: "not-json",
+      }),
+      { params: Promise.resolve({ matchId: "match-id" }) },
+    );
+
+    expect(response.status).toBe(401);
+    expect(mocks.processMatchResult).not.toHaveBeenCalled();
+  });
+
+  it("validates and processes an official match result through the admin contract", async () => {
+    const matchId = "b105eeea-0e6e-4f29-9d95-6c772c47bb7d";
+    mocks.getApiSession.mockResolvedValue({ user: { id: "admin-id", role: "ADMIN" } });
+    mocks.processMatchResult.mockResolvedValue({ status: "PROCESSED" });
+
+    const response = await processMatchResult(
+      new NextRequest(
+        `https://app.example.invalid/api/v1/admin/matches/${matchId}/process-result`,
+        {
+          method: "POST",
+          body: JSON.stringify({ officialHomeGoals: 2, officialAwayGoals: 1, confirmation: true }),
+        },
+      ),
+      { params: Promise.resolve({ matchId }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { matchId, status: "PROCESSED" },
+    });
+    expect(mocks.processMatchResult).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "admin-id", role: "ADMIN" }),
+      { matchId, homeGoals: 2, awayGoals: 1 },
+      expect.any(Date),
+    );
+  });
+
+  it("validates a reschedule date and maps unavailable matches to the HTTP error contract", async () => {
+    const matchId = "b105eeea-0e6e-4f29-9d95-6c772c47bb7d";
+    mocks.getApiSession.mockResolvedValue({ user: { id: "admin-id", role: "ADMIN" } });
+    const invalid = await rescheduleMatch(
+      new NextRequest(`https://app.example.invalid/api/v1/admin/matches/${matchId}/reschedule`, {
+        method: "POST",
+        body: JSON.stringify({ newScheduledAt: "tomorrow" }),
+      }),
+      { params: Promise.resolve({ matchId }) },
+    );
+    expect(invalid.status).toBe(400);
+    expect(mocks.rescheduleMatch).not.toHaveBeenCalled();
+
+    mocks.rescheduleMatch.mockRejectedValue(new Error("NOT_FOUND"));
+    const missing = await rescheduleMatch(
+      new NextRequest(`https://app.example.invalid/api/v1/admin/matches/${matchId}/reschedule`, {
+        method: "POST",
+        body: JSON.stringify({
+          newScheduledAt: "2026-08-15T01:00:00.000Z",
+          reason: "Cancha no disponible",
+        }),
+      }),
+      { params: Promise.resolve({ matchId }) },
+    );
+    expect(missing.status).toBe(404);
+    await expect(missing.json()).resolves.toMatchObject({ error: { code: "MATCH_NOT_FOUND" } });
+  });
+
+  it("restricts season recalculation to super administrators and returns its summary", async () => {
+    const seasonId = "b105eeea-0e6e-4f29-9d95-6c772c47bb7d";
+    mocks.getApiSession.mockResolvedValue({ user: { id: "admin-id", role: "ADMIN" } });
+    const forbidden = await recalculateSeason(
+      request(`/api/v1/super-admin/seasons/${seasonId}/recalculate`),
+      {
+        params: Promise.resolve({ seasonId }),
+      },
+    );
+    expect(forbidden.status).toBe(403);
+    expect(mocks.recalculateSeason).not.toHaveBeenCalled();
+
+    mocks.getApiSession.mockResolvedValue({ user: { id: "super-admin-id", role: "SUPER_ADMIN" } });
+    mocks.recalculateSeason.mockResolvedValue({ matches: 2, scores: 4, standings: 2 });
+    const response = await recalculateSeason(
+      request(`/api/v1/super-admin/seasons/${seasonId}/recalculate`),
+      {
+        params: Promise.resolve({ seasonId }),
+      },
+    );
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { matches: 2, scores: 4, standings: 2 },
+    });
   });
 
   it("validates and confirms an email verification token through its JSON contract", async () => {
