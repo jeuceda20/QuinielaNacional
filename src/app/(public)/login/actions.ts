@@ -7,12 +7,7 @@ import { getSessionCookieOptions } from "@/modules/auth/application/session-serv
 import { createLoginService } from "@/modules/auth/infrastructure/create-auth-services";
 
 import { getRequestIpAddress } from "@/lib/request-metadata";
-
-export type LoginActionState = Readonly<{
-  status: "IDLE" | "INVALID" | "PENDING_EMAIL_CONFIRMATION" | "PENDING_APPROVAL";
-  message: string;
-}>;
-export const initialLoginActionState: LoginActionState = { status: "IDLE", message: "" };
+import type { LoginActionState } from "@/modules/auth/ui/action-states";
 export async function loginAction(
   _: LoginActionState,
   formData: FormData,

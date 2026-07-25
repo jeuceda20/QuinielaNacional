@@ -8,13 +8,7 @@ import {
 import { registerInputSchema } from "@/modules/auth/schemas/register-input";
 
 import { getRequestIpAddress } from "@/lib/request-metadata";
-
-export type RegisterActionState = Readonly<{
-  success: boolean;
-  message: string;
-  fieldErrors?: Record<string, string[]>;
-}>;
-export const initialRegisterActionState: RegisterActionState = { success: false, message: "" };
+import type { RegisterActionState } from "@/modules/auth/ui/action-states";
 
 export async function registerAction(
   _: RegisterActionState,

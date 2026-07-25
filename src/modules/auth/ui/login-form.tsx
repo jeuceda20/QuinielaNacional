@@ -3,7 +3,9 @@ import { useActionState } from "react";
 
 import Link from "next/link";
 
-import { initialLoginActionState, loginAction } from "@/app/(public)/login/actions";
+import { loginAction } from "@/app/(public)/login/actions";
+
+import { initialLoginActionState } from "./action-states";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(loginAction, initialLoginActionState);

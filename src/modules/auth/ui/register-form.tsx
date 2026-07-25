@@ -4,7 +4,9 @@ import { useActionState } from "react";
 
 import Link from "next/link";
 
-import { initialRegisterActionState, registerAction } from "@/app/(public)/register/actions";
+import { registerAction } from "@/app/(public)/register/actions";
+
+import { initialRegisterActionState } from "./action-states";
 
 type Team = Readonly<{ id: string; name: string }>;
 export function RegisterForm({ teams }: Readonly<{ teams: readonly Team[] }>) {
