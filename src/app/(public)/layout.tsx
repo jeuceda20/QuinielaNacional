@@ -15,6 +15,9 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
             <Link href="/standings" className="rounded-md px-3 py-2 hover:bg-slate-100">
               Clasificación
             </Link>
+            <Link href="/results" className="rounded-md px-3 py-2 hover:bg-slate-100">
+              Resultados
+            </Link>
             <Link href="/login" className="rounded-md px-3 py-2 hover:bg-slate-100">
               Iniciar sesión
             </Link>
