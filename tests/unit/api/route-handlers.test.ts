@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   auditCount: vi.fn(),
   auditFindMany: vi.fn(),
+  approveUser: vi.fn(),
   confirmEmail: vi.fn(),
   createLoginService: vi.fn(),
   createPasswordRecoveryService: vi.fn(),
@@ -72,6 +73,20 @@ vi.mock("@/modules/results/infrastructure/prisma-public-results-repository", () 
     list = mocks.listResults;
   },
 }));
+vi.mock("@/modules/users/application/approve-user", () => ({
+  ApproveUser: class {
+    execute = mocks.approveUser;
+  },
+  ApproveUserError: class ApproveUserError extends Error {
+    code = "FORBIDDEN";
+  },
+}));
+vi.mock("@/modules/users/infrastructure/prisma-user-repository", () => ({
+  PrismaUserRepository: class {},
+}));
+vi.mock("@/modules/users/infrastructure/prisma-user-approval-repository", () => ({
+  PrismaUserApprovalRepository: class {},
+}));
 vi.mock("@/modules/auth/application/confirm-email", () => ({
   ConfirmEmail: class {
     execute = mocks.confirmEmail;
@@ -116,6 +131,7 @@ import { GET as getPublicConfig } from "@/app/api/v1/public/config/route";
 import { GET as getPublicTeams } from "@/app/api/v1/public/teams/route";
 import { GET as getResults } from "@/app/api/v1/results/route";
 import { GET as getStandings } from "@/app/api/v1/standings/route";
+import { POST as approveUser } from "@/app/api/v1/admin/users/[userId]/approve/route";
 
 const request = (path: string) => new NextRequest(`https://app.example.invalid${path}`);
 
@@ -138,6 +154,7 @@ describe("API route handlers", () => {
     mocks.revalidatePredictionCaches.mockReset();
     mocks.savePrediction.mockReset();
     mocks.auditCount.mockReset();
+    mocks.approveUser.mockReset();
     mocks.auditFindMany.mockReset();
   });
 
@@ -375,6 +392,15 @@ describe("API route handlers", () => {
       success: true,
       data: [{ id: "match-id", officialResult: "2-1", rows: [] }],
     });
+  });
+
+  it("rejects user approval for a non-administrator", async () => {
+    mocks.getApiSession.mockResolvedValue({ user: { id: "user-id", role: "USER" } });
+    const response = await approveUser(request("/api/v1/admin/users/target/approve"), {
+      params: Promise.resolve({ userId: "target" }),
+    });
+    expect(response.status).toBe(403);
+    expect(mocks.approveUser).not.toHaveBeenCalled();
   });
 
   it("validates and confirms an email verification token through its JSON contract", async () => {

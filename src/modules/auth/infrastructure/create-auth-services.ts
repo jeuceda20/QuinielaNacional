@@ -16,7 +16,7 @@ import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user
 import { env } from "@/lib/env/server";
 import { prisma } from "@/lib/prisma";
 
-function createEmailProvider() {
+export function createAuthEmailProvider() {
   return new RateLimitedEmailProvider(
     new GmailSmtpEmailProvider({
       host: env.SMTP_HOST,
@@ -34,7 +34,7 @@ export function createRegistrationService() {
     new PrismaTeamRepository(),
     new Argon2PasswordHasher(),
     new PrismaEmailVerificationTokenRepository(),
-    createEmailProvider(),
+    createAuthEmailProvider(),
     env.APP_URL,
   );
 }
@@ -69,7 +69,7 @@ export function createPasswordRecoveryService(enforceRateLimit: boolean) {
     new PrismaUserRepository(),
     new PrismaPasswordResetTokenRepository(),
     new Argon2PasswordHasher(),
-    createEmailProvider(),
+    createAuthEmailProvider(),
     {
       consume: (email, now) =>
         enforceRateLimit
