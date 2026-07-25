@@ -54,7 +54,10 @@ export class DiagnosticRunHistory {
 export function sanitizeDiagnosticError(error: unknown): string {
   const message = error instanceof Error ? error.message : "La ejecucion diagnostica fallo.";
   return message
-    .replace(/(password|token|secret|authorization)\s*[=:]\s*[^\s,;]+/gi, "$1=[REDACTED]")
+    .replace(
+      /(password|token|secret|authorization)\s*[=:]\s*(?:Bearer\s+)?[^\s,;]+/gi,
+      "$1=[REDACTED]",
+    )
     .slice(0, 1000);
 }
 

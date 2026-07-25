@@ -44,11 +44,14 @@ describe("DiagnosticRunHistory", () => {
       () => new Date("2026-07-24T12:00:00.000Z"),
     );
 
-    await history.fail("run-1", new Error("token=secret-value no pudo verificarse"));
+    await history.fail(
+      "run-1",
+      new Error("authorization: Bearer secret-value no pudo verificarse"),
+    );
 
     expect(repository.fail).toHaveBeenCalledWith(
       "run-1",
-      "token=[REDACTED] no pudo verificarse",
+      "authorization=[REDACTED] no pudo verificarse",
       new Date("2026-07-24T12:00:00.000Z"),
     );
     expect(sanitizeDiagnosticError("raw")).toBe("La ejecucion diagnostica fallo.");
