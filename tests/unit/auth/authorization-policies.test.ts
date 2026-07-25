@@ -6,10 +6,13 @@ import {
   AuthorizationRole,
   type AuthorizationTarget,
   canApproveUser,
+  canManageAdministratorRole,
   canManageMatch,
+  canManageUserLifecycle,
   canProcessResult,
   canPromoteAdmin,
   canUseDiagnostics,
+  UserLifecycleAction,
 } from "@/modules/auth/domain/authorization-policies";
 import { MatchStatus } from "@/modules/matches/domain/match-status-machine";
 
@@ -65,6 +68,60 @@ describe("authorization policies", () => {
     expect(canPromoteAdmin(approvedSuperAdmin, approvedUser)).toBe(true);
     expect(canPromoteAdmin(approvedAdmin, approvedUser)).toBe(false);
     expect(canPromoteAdmin(approvedSuperAdmin, approvedAdmin)).toBe(false);
+  });
+
+  it("allows only super administrators to switch between user and administrator roles", () => {
+    expect(
+      canManageAdministratorRole(approvedSuperAdmin, approvedUser, AuthorizationRole.ADMIN),
+    ).toBe(true);
+    expect(
+      canManageAdministratorRole(approvedSuperAdmin, approvedAdmin, AuthorizationRole.USER),
+    ).toBe(true);
+    expect(canManageAdministratorRole(approvedAdmin, approvedUser, AuthorizationRole.ADMIN)).toBe(
+      false,
+    );
+    expect(
+      canManageAdministratorRole(approvedSuperAdmin, approvedSuperAdmin, AuthorizationRole.ADMIN),
+    ).toBe(false);
+  });
+
+  it("allows each lifecycle action only from its expected account state", () => {
+    expect(
+      canManageUserLifecycle(approvedAdmin, pendingApprovalUser, UserLifecycleAction.REJECT),
+    ).toBe(true);
+    expect(canManageUserLifecycle(approvedAdmin, approvedUser, UserLifecycleAction.BLOCK)).toBe(
+      true,
+    );
+    expect(canManageUserLifecycle(approvedAdmin, approvedUser, UserLifecycleAction.DISABLE)).toBe(
+      true,
+    );
+    expect(
+      canManageUserLifecycle(
+        approvedAdmin,
+        { role: AuthorizationRole.USER, status: AuthorizationAccountStatus.BLOCKED },
+        UserLifecycleAction.UNBLOCK,
+      ),
+    ).toBe(true);
+    expect(
+      canManageUserLifecycle(
+        approvedAdmin,
+        { role: AuthorizationRole.USER, status: AuthorizationAccountStatus.DISABLED },
+        UserLifecycleAction.ENABLE,
+      ),
+    ).toBe(true);
+    expect(canManageUserLifecycle(approvedAdmin, approvedUser, UserLifecycleAction.REJECT)).toBe(
+      false,
+    );
+  });
+
+  it("prevents administrators from changing a super administrator lifecycle", () => {
+    expect(
+      canManageUserLifecycle(
+        approvedAdmin,
+        { role: AuthorizationRole.SUPER_ADMIN, status: AuthorizationAccountStatus.APPROVED },
+        UserLifecycleAction.BLOCK,
+      ),
+    ).toBe(false);
   });
 
   it("requires an approved super administrator and enabled diagnostics", () => {
