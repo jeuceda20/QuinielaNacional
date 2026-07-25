@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
+import { RecalculateSeasonForm } from "@/modules/standings/ui/recalculate-season-form";
 
 import { prisma } from "@/lib/prisma";
 
@@ -22,6 +23,7 @@ export default async function SeasonsPage() {
         },
         take: 20,
       },
+      _count: { select: { standings: true } },
     },
   });
   return (
@@ -116,6 +118,9 @@ export default async function SeasonsPage() {
               </li>
             ))}
           </ul>
+          {s.user.role === "SUPER_ADMIN" && (
+            <RecalculateSeasonForm seasonId={x.id} standingCount={x._count.standings} />
+          )}
         </article>
       ))}
     </section>
