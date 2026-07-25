@@ -2,16 +2,9 @@
 
 import { cookies } from "next/headers";
 
-import { loginInputSchema, LoginUser } from "@/modules/auth/application/login-user";
-import {
-  getSessionCookieOptions,
-  SessionService,
-} from "@/modules/auth/application/session-service";
-import { Argon2PasswordHasher } from "@/modules/auth/infrastructure/argon2-password-hasher";
-import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
-import { RateLimiter, rateLimitRules } from "@/modules/security/application/rate-limiter";
-import { PrismaRateLimitRepository } from "@/modules/security/infrastructure/prisma-rate-limit-repository";
-import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
+import { loginInputSchema } from "@/modules/auth/application/login-user";
+import { getSessionCookieOptions } from "@/modules/auth/application/session-service";
+import { createLoginService } from "@/modules/auth/infrastructure/create-auth-services";
 
 import { getRequestIpAddress } from "@/lib/request-metadata";
 
@@ -32,20 +25,7 @@ export async function loginAction(
     userAgent: null,
   });
   if (!parsed.success) return { status: "INVALID", message: "Correo o contraseña incorrectos." };
-  const passwords = new Argon2PasswordHasher();
-  const sessionService = new SessionService(new PrismaSessionRepository());
-  const limiter = new RateLimiter(new PrismaRateLimitRepository());
-  const login = new LoginUser(
-    new PrismaUserRepository(),
-    passwords,
-    sessionService,
-    {
-      consume: async (ip, email, now) =>
-        (await limiter.consume("login:ip", ip, rateLimitRules.loginByIp, now)) &&
-        limiter.consume("login:email", email, rateLimitRules.loginByEmail, now),
-    },
-    await passwords.hash("timing-placeholder-password"),
-  );
+  const login = await createLoginService();
   const result = await login.execute(parsed.data, new Date());
   if (result.status === "AUTHENTICATED" && result.token && result.expiresAt) {
     (await cookies()).set("session", result.token, {

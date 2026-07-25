@@ -1,0 +1,62 @@
+import { LoginUser } from "@/modules/auth/application/login-user";
+import { RegisterUser } from "@/modules/auth/application/register-user";
+import { SessionService } from "@/modules/auth/application/session-service";
+import { Argon2PasswordHasher } from "@/modules/auth/infrastructure/argon2-password-hasher";
+import { PrismaEmailVerificationTokenRepository } from "@/modules/auth/infrastructure/prisma-email-verification-token-repository";
+import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
+import { GmailSmtpEmailProvider } from "@/modules/email/infrastructure/gmail-smtp-email-provider";
+import { RateLimitedEmailProvider } from "@/modules/email/infrastructure/rate-limited-email-provider";
+import { RateLimiter, rateLimitRules } from "@/modules/security/application/rate-limiter";
+import { PrismaRateLimitRepository } from "@/modules/security/infrastructure/prisma-rate-limit-repository";
+import { PrismaTeamRepository } from "@/modules/sports/infrastructure/prisma-sports-repositories";
+import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
+
+import { env } from "@/lib/env/server";
+
+function createEmailProvider() {
+  return new RateLimitedEmailProvider(
+    new GmailSmtpEmailProvider({
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      user: env.SMTP_USER,
+      appPassword: env.SMTP_APP_PASSWORD,
+    }),
+    new RateLimiter(new PrismaRateLimitRepository()),
+  );
+}
+
+export function createRegistrationService() {
+  return new RegisterUser(
+    new PrismaUserRepository(),
+    new PrismaTeamRepository(),
+    new Argon2PasswordHasher(),
+    new PrismaEmailVerificationTokenRepository(),
+    createEmailProvider(),
+    env.APP_URL,
+  );
+}
+
+export function consumeRegistrationRateLimit(ipAddress: string | null, now: Date) {
+  return new RateLimiter(new PrismaRateLimitRepository()).consume(
+    "registration:ip",
+    ipAddress,
+    rateLimitRules.registrationByIp,
+    now,
+  );
+}
+
+export async function createLoginService() {
+  const passwords = new Argon2PasswordHasher();
+  const limiter = new RateLimiter(new PrismaRateLimitRepository());
+  return new LoginUser(
+    new PrismaUserRepository(),
+    passwords,
+    new SessionService(new PrismaSessionRepository()),
+    {
+      consume: async (ipAddress, email, now) =>
+        (await limiter.consume("login:ip", ipAddress, rateLimitRules.loginByIp, now)) &&
+        limiter.consume("login:email", email, rateLimitRules.loginByEmail, now),
+    },
+    await passwords.hash("timing-placeholder-password"),
+  );
+}

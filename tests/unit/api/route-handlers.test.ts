@@ -5,9 +5,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   auditCount: vi.fn(),
   auditFindMany: vi.fn(),
+  confirmEmail: vi.fn(),
+  createLoginService: vi.fn(),
+  createRegistrationService: vi.fn(),
+  consumeRegistrationRateLimit: vi.fn(),
   getApiSession: vi.fn(),
   getSettings: vi.fn(),
   listTeams: vi.fn(),
+  logout: vi.fn(),
   revalidatePredictionCaches: vi.fn(),
   savePrediction: vi.fn(),
   userFindFirst: vi.fn(),
@@ -46,9 +51,39 @@ vi.mock("@/modules/predictions/infrastructure/prediction-cache", () => ({
 vi.mock("@/modules/predictions/infrastructure/prisma-save-prediction-repository", () => ({
   PrismaSavePredictionRepository: class {},
 }));
+vi.mock("@/modules/auth/application/confirm-email", () => ({
+  ConfirmEmail: class {
+    execute = mocks.confirmEmail;
+  },
+  InvalidEmailConfirmationTokenError: class InvalidEmailConfirmationTokenError extends Error {},
+}));
+vi.mock("@/modules/auth/infrastructure/prisma-email-confirmation-repository", () => ({
+  PrismaEmailConfirmationRepository: class {},
+}));
+vi.mock("@/modules/auth/application/logout-user", () => ({
+  LogoutUser: class {
+    execute = mocks.logout;
+  },
+}));
+vi.mock("@/modules/auth/application/session-service", () => ({
+  SessionService: class {},
+  getSessionCookieOptions: () => ({ httpOnly: true, path: "/", sameSite: "lax" }),
+}));
+vi.mock("@/modules/auth/infrastructure/prisma-session-repository", () => ({
+  PrismaSessionRepository: class {},
+}));
+vi.mock("@/modules/auth/infrastructure/create-auth-services", () => ({
+  createLoginService: mocks.createLoginService,
+  createRegistrationService: mocks.createRegistrationService,
+  consumeRegistrationRateLimit: mocks.consumeRegistrationRateLimit,
+}));
 
 import { GET as getAudit } from "@/app/api/v1/admin/audit/route";
+import { POST as login } from "@/app/api/v1/auth/login/route";
+import { POST as logout } from "@/app/api/v1/auth/logout/route";
 import { GET as getCurrentUser } from "@/app/api/v1/auth/me/route";
+import { POST as register } from "@/app/api/v1/auth/register/route";
+import { POST as verifyEmail } from "@/app/api/v1/auth/verify-email/route";
 import { GET as getHealth } from "@/app/api/v1/health/route";
 import { PUT as savePrediction } from "@/app/api/v1/matches/[matchId]/prediction/route";
 import { GET as getPublicConfig } from "@/app/api/v1/public/config/route";
@@ -59,6 +94,11 @@ const request = (path: string) => new NextRequest(`https://app.example.invalid${
 describe("API route handlers", () => {
   beforeEach(() => {
     mocks.getApiSession.mockReset();
+    mocks.confirmEmail.mockReset();
+    mocks.createLoginService.mockReset();
+    mocks.createRegistrationService.mockReset();
+    mocks.consumeRegistrationRateLimit.mockReset();
+    mocks.logout.mockReset();
     mocks.getSettings.mockReset();
     mocks.listTeams.mockReset();
     mocks.userFindFirst.mockReset();
@@ -259,5 +299,106 @@ describe("API route handlers", () => {
       success: false,
       error: { code: "PREDICTION_CLOSED" },
     });
+  });
+
+  it("validates and confirms an email verification token through its JSON contract", async () => {
+    mocks.confirmEmail.mockResolvedValue("CONFIRMED");
+
+    const response = await verifyEmail(
+      new NextRequest("https://app.example.invalid/api/v1/auth/verify-email", {
+        method: "POST",
+        body: JSON.stringify({ token: "a".repeat(32) }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      data: { status: "PENDING_APPROVAL" },
+    });
+  });
+
+  it("returns 204 for logout without exposing session data", async () => {
+    const response = await logout(
+      new NextRequest("https://app.example.invalid/api/v1/auth/logout", { method: "POST" }),
+    );
+
+    expect(response.status).toBe(204);
+    expect(await response.text()).toBe("");
+  });
+
+  it("rejects invalid registration input before consuming the rate-limit bucket", async () => {
+    const response = await register(
+      new NextRequest("https://app.example.invalid/api/v1/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ email: "not-an-email" }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      success: false,
+      error: { code: "VALIDATION_ERROR" },
+    });
+    expect(mocks.consumeRegistrationRateLimit).not.toHaveBeenCalled();
+  });
+
+  it("returns the registration contract without including a verification token", async () => {
+    mocks.consumeRegistrationRateLimit.mockResolvedValue(true);
+    mocks.createRegistrationService.mockReturnValue({
+      execute: vi.fn().mockResolvedValue({ userId: "user-id", emailSent: true }),
+    });
+    const body = {
+      firstName: "Ana",
+      lastName: "Test",
+      nickname: "ana_test",
+      email: "ana@example.invalid",
+      password: "correct-horse-battery",
+      passwordConfirmation: "correct-horse-battery",
+      favoriteTeamId: "b105eeea-0e6e-4f29-9d95-6c772c47bb7d",
+      acceptedRules: true,
+    };
+
+    const response = await register(
+      new NextRequest("https://app.example.invalid/api/v1/auth/register", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: {
+        status: "PENDING_EMAIL_CONFIRMATION",
+        message: "Revisa tu correo para confirmar tu cuenta.",
+        emailSent: true,
+      },
+    });
+  });
+
+  it("sets an HttpOnly session cookie only after a successful login", async () => {
+    mocks.createLoginService.mockResolvedValue({
+      execute: vi.fn().mockResolvedValue({
+        status: "AUTHENTICATED",
+        token: "opaque-session-token",
+        expiresAt: new Date("2026-08-22T00:00:00.000Z"),
+      }),
+    });
+
+    const response = await login(
+      new NextRequest("https://app.example.invalid/api/v1/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email: "ana@example.invalid", password: "correct-horse-battery" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { status: "AUTHENTICATED" },
+    });
+    expect(response.headers.get("set-cookie")).toMatch(/session=opaque-session-token; Path=\//);
+    expect(response.headers.get("set-cookie")).toContain("HttpOnly");
   });
 });
