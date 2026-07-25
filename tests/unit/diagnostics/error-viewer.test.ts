@@ -24,5 +24,8 @@ describe("DiagnosticErrorViewer", () => {
     expect(redactDiagnosticError(null)).toBe(
       "La ejecucion diagnostica fallo sin un mensaje disponible.",
     );
+    expect(redactDiagnosticError("postgresql://user:password@db.example/app")).toBe(
+      "postgresql://[REDACTED]@db.example/app",
+    );
   });
 });

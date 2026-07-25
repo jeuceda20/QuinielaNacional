@@ -1,5 +1,9 @@
+import { createHash } from "node:crypto";
+
 import type { ReadSqlRepository } from "@/modules/diagnostics/application/read-sql-console";
+
 import { prisma } from "@/lib/prisma";
+
 import type { PrismaClient } from "@/generated/prisma/client";
 export class PrismaReadSqlRepository implements ReadSqlRepository {
   public constructor(
@@ -15,7 +19,11 @@ export class PrismaReadSqlRepository implements ReadSqlRepository {
         actorRole: "SUPER_ADMIN",
         action: "SQL_QUERY_EXECUTED",
         entityType: "SYSTEM",
-        metadataJson: { sql },
+        metadataJson: {
+          statement: "SELECT",
+          queryHash: createHash("sha256").update(sql).digest("hex"),
+          queryLength: sql.length,
+        },
         requestId,
       },
     });

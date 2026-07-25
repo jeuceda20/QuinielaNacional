@@ -6,6 +6,8 @@ export type DiagnosticErrorView = Readonly<{
   requestId: string | null;
 }>;
 
+import { redactSensitiveText } from "@/lib/redact-sensitive-text";
+
 export interface DiagnosticErrorViewRepository {
   listFailures(page: number, pageSize: number): Promise<readonly DiagnosticErrorView[]>;
 }
@@ -20,12 +22,7 @@ export class DiagnosticErrorViewer {
 
 export function redactDiagnosticError(message: string | null): string {
   if (!message) return "La ejecucion diagnostica fallo sin un mensaje disponible.";
-  return message
-    .replace(
-      /(password|token|secret|authorization)\s*[=:]\s*(?:Bearer\s+)?[^\s,;]+/gi,
-      "$1=[REDACTED]",
-    )
-    .slice(0, 1000);
+  return redactSensitiveText(message).slice(0, 1000);
 }
 
 function normalizePage(page: number): number {

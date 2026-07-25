@@ -5,6 +5,7 @@ import type {
 } from "@/modules/audit/domain/audit-log-repository";
 
 import { prisma } from "@/lib/prisma";
+import { redactSensitiveText } from "@/lib/redact-sensitive-text";
 
 import { AuditAction, AuditEntityType, Prisma, type PrismaClient } from "@/generated/prisma/client";
 
@@ -13,6 +14,7 @@ export type AuditLogRepositoryDatabase = Pick<PrismaClient, "auditLog">;
 const sensitiveKey = /password|hash|token|secret|credential|cookie/i;
 
 export function sanitizeAuditJson(value: AuditJson | undefined): AuditJson | undefined {
+  if (typeof value === "string") return redactSensitiveText(value);
   if (value === undefined || value === null || typeof value !== "object") return value;
   if (Array.isArray(value)) return value.map(sanitizeAuditJson) as AuditJson;
   return Object.fromEntries(

@@ -1,5 +1,7 @@
 import type { AuditJson } from "@/modules/audit/domain/audit-log-repository";
 
+import { redactSensitiveText } from "@/lib/redact-sensitive-text";
+
 export type DiagnosticRunStatus = "RUNNING" | "SUCCEEDED" | "FAILED";
 
 export type DiagnosticRunHistoryItem = Readonly<{
@@ -53,12 +55,7 @@ export class DiagnosticRunHistory {
 
 export function sanitizeDiagnosticError(error: unknown): string {
   const message = error instanceof Error ? error.message : "La ejecucion diagnostica fallo.";
-  return message
-    .replace(
-      /(password|token|secret|authorization)\s*[=:]\s*(?:Bearer\s+)?[^\s,;]+/gi,
-      "$1=[REDACTED]",
-    )
-    .slice(0, 1000);
+  return redactSensitiveText(message).slice(0, 1000);
 }
 
 function normalizePage(page: number): number {
