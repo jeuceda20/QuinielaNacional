@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { getAllowedServerActionOrigins } from "./src/lib/security/server-action-origins";
+
 const securityHeaders = [
   {
     key: "Content-Security-Policy",
@@ -19,6 +21,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Server Actions are all state-changing entry points in this application.
+  // Next.js rejects cross-origin actions; this allowlist also supports the
+  // configured public host when the app is deployed behind a reverse proxy.
+  experimental: {
+    serverActions: {
+      allowedOrigins: getAllowedServerActionOrigins(process.env.APP_URL),
+    },
+  },
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];
   },
