@@ -1,8 +1,10 @@
 import { LoginUser } from "@/modules/auth/application/login-user";
+import { PasswordRecovery } from "@/modules/auth/application/password-recovery";
 import { RegisterUser } from "@/modules/auth/application/register-user";
 import { SessionService } from "@/modules/auth/application/session-service";
 import { Argon2PasswordHasher } from "@/modules/auth/infrastructure/argon2-password-hasher";
 import { PrismaEmailVerificationTokenRepository } from "@/modules/auth/infrastructure/prisma-email-verification-token-repository";
+import { PrismaPasswordResetTokenRepository } from "@/modules/auth/infrastructure/prisma-password-reset-token-repository";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
 import { GmailSmtpEmailProvider } from "@/modules/email/infrastructure/gmail-smtp-email-provider";
 import { RateLimitedEmailProvider } from "@/modules/email/infrastructure/rate-limited-email-provider";
@@ -12,6 +14,7 @@ import { PrismaTeamRepository } from "@/modules/sports/infrastructure/prisma-spo
 import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
 
 import { env } from "@/lib/env/server";
+import { prisma } from "@/lib/prisma";
 
 function createEmailProvider() {
   return new RateLimitedEmailProvider(
@@ -58,5 +61,32 @@ export async function createLoginService() {
         limiter.consume("login:email", email, rateLimitRules.loginByEmail, now),
     },
     await passwords.hash("timing-placeholder-password"),
+  );
+}
+
+export function createPasswordRecoveryService(enforceRateLimit: boolean) {
+  return new PasswordRecovery(
+    new PrismaUserRepository(),
+    new PrismaPasswordResetTokenRepository(),
+    new Argon2PasswordHasher(),
+    createEmailProvider(),
+    {
+      consume: (email, now) =>
+        enforceRateLimit
+          ? new RateLimiter(new PrismaRateLimitRepository()).consume(
+              "password-recovery:email",
+              email,
+              rateLimitRules.passwordRecoveryByEmail,
+              now,
+            )
+          : Promise.resolve(true),
+    },
+    env.APP_URL,
+    async (userId, now) => {
+      await prisma.session.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: now },
+      });
+    },
   );
 }

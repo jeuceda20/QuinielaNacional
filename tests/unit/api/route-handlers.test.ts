@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   auditFindMany: vi.fn(),
   confirmEmail: vi.fn(),
   createLoginService: vi.fn(),
+  createPasswordRecoveryService: vi.fn(),
   createRegistrationService: vi.fn(),
   consumeRegistrationRateLimit: vi.fn(),
   getApiSession: vi.fn(),
@@ -74,15 +75,18 @@ vi.mock("@/modules/auth/infrastructure/prisma-session-repository", () => ({
 }));
 vi.mock("@/modules/auth/infrastructure/create-auth-services", () => ({
   createLoginService: mocks.createLoginService,
+  createPasswordRecoveryService: mocks.createPasswordRecoveryService,
   createRegistrationService: mocks.createRegistrationService,
   consumeRegistrationRateLimit: mocks.consumeRegistrationRateLimit,
 }));
 
 import { GET as getAudit } from "@/app/api/v1/admin/audit/route";
+import { POST as forgotPassword } from "@/app/api/v1/auth/forgot-password/route";
 import { POST as login } from "@/app/api/v1/auth/login/route";
 import { POST as logout } from "@/app/api/v1/auth/logout/route";
 import { GET as getCurrentUser } from "@/app/api/v1/auth/me/route";
 import { POST as register } from "@/app/api/v1/auth/register/route";
+import { POST as resetPassword } from "@/app/api/v1/auth/reset-password/route";
 import { POST as verifyEmail } from "@/app/api/v1/auth/verify-email/route";
 import { GET as getHealth } from "@/app/api/v1/health/route";
 import { PUT as savePrediction } from "@/app/api/v1/matches/[matchId]/prediction/route";
@@ -96,6 +100,7 @@ describe("API route handlers", () => {
     mocks.getApiSession.mockReset();
     mocks.confirmEmail.mockReset();
     mocks.createLoginService.mockReset();
+    mocks.createPasswordRecoveryService.mockReset();
     mocks.createRegistrationService.mockReset();
     mocks.consumeRegistrationRateLimit.mockReset();
     mocks.logout.mockReset();
@@ -400,5 +405,50 @@ describe("API route handlers", () => {
     });
     expect(response.headers.get("set-cookie")).toMatch(/session=opaque-session-token; Path=\//);
     expect(response.headers.get("set-cookie")).toContain("HttpOnly");
+  });
+
+  it("keeps password recovery responses generic", async () => {
+    mocks.createPasswordRecoveryService.mockReturnValue({ request: vi.fn().mockResolvedValue({}) });
+
+    const response = await forgotPassword(
+      new NextRequest("https://app.example.invalid/api/v1/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email: "unknown@example.invalid" }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { message: "Si la cuenta existe, enviaremos instrucciones." },
+    });
+  });
+
+  it("rejects invalid reset input and maps expired tokens to 410", async () => {
+    const invalid = await resetPassword(
+      new NextRequest("https://app.example.invalid/api/v1/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({ token: "bad", password: "short", passwordConfirmation: "short" }),
+      }),
+    );
+    expect(invalid.status).toBe(400);
+
+    mocks.createPasswordRecoveryService.mockReturnValue({
+      reset: vi.fn().mockResolvedValue(false),
+    });
+    const expired = await resetPassword(
+      new NextRequest("https://app.example.invalid/api/v1/auth/reset-password", {
+        method: "POST",
+        body: JSON.stringify({
+          token: "a".repeat(32),
+          password: "correct-horse-battery",
+          passwordConfirmation: "correct-horse-battery",
+        }),
+      }),
+    );
+    expect(expired.status).toBe(410);
+    await expect(expired.json()).resolves.toMatchObject({
+      error: { code: "AUTH_RESET_TOKEN_INVALID" },
+    });
   });
 });
