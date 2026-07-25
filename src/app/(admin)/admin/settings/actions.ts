@@ -37,6 +37,15 @@ export async function savePublicSettings(formData: FormData) {
       create: { key, valueJson: value, isPublic: true, updatedById: session.user.id },
       update: { valueJson: value, isPublic: true, updatedById: session.user.id },
     });
+  await prisma.auditLog.create({
+    data: {
+      actorUserId: session.user.id,
+      actorRole: "SUPER_ADMIN",
+      action: "SETTINGS_UPDATED",
+      entityType: "SETTING",
+      metadataJson: { keys: entries.map(([key]) => key) },
+    },
+  });
   revalidatePath("/admin/settings");
   revalidatePath("/how-it-works");
 }

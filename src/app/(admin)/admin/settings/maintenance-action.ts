@@ -13,6 +13,10 @@ export async function setMaintenanceAction(formData: FormData) {
       : null;
   if (!session || session.user.role !== "SUPER_ADMIN") throw new Error("FORBIDDEN");
   const enabled = formData.get("enabled") === "true";
+  const previous = await prisma.applicationSetting.findUnique({
+    where: { key: "APPLICATION_MAINTENANCE_MODE" },
+    select: { valueJson: true },
+  });
   await prisma.applicationSetting.upsert({
     where: { key: "APPLICATION_MAINTENANCE_MODE" },
     create: {
@@ -22,6 +26,16 @@ export async function setMaintenanceAction(formData: FormData) {
       updatedById: session.user.id,
     },
     update: { valueJson: enabled, isPublic: true, updatedById: session.user.id },
+  });
+  await prisma.auditLog.create({
+    data: {
+      actorUserId: session.user.id,
+      actorRole: "SUPER_ADMIN",
+      action: enabled ? "MAINTENANCE_ENABLED" : "MAINTENANCE_DISABLED",
+      entityType: "SETTING",
+      beforeJson: { enabled: previous?.valueJson ?? false },
+      afterJson: { enabled },
+    },
   });
   revalidatePath("/", "layout");
 }
