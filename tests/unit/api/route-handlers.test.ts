@@ -17,6 +17,8 @@ const mocks = vi.hoisted(() => ({
   revalidatePredictionCaches: vi.fn(),
   savePrediction: vi.fn(),
   userFindFirst: vi.fn(),
+  getClosesAt: vi.fn(),
+  getOwnPrediction: vi.fn(),
 }));
 
 vi.mock("@/lib/api/session", () => ({
@@ -51,6 +53,12 @@ vi.mock("@/modules/predictions/infrastructure/prediction-cache", () => ({
 }));
 vi.mock("@/modules/predictions/infrastructure/prisma-save-prediction-repository", () => ({
   PrismaSavePredictionRepository: class {},
+}));
+vi.mock("@/modules/predictions/infrastructure/prisma-prediction-visibility-repository", () => ({
+  PrismaPredictionVisibilityRepository: class {
+    getClosesAt = mocks.getClosesAt;
+    getOwn = mocks.getOwnPrediction;
+  },
 }));
 vi.mock("@/modules/auth/application/confirm-email", () => ({
   ConfirmEmail: class {
@@ -90,6 +98,7 @@ import { POST as resetPassword } from "@/app/api/v1/auth/reset-password/route";
 import { POST as verifyEmail } from "@/app/api/v1/auth/verify-email/route";
 import { GET as getHealth } from "@/app/api/v1/health/route";
 import { PUT as savePrediction } from "@/app/api/v1/matches/[matchId]/prediction/route";
+import { GET as getOwnPrediction } from "@/app/api/v1/matches/[matchId]/prediction/route";
 import { GET as getPublicConfig } from "@/app/api/v1/public/config/route";
 import { GET as getPublicTeams } from "@/app/api/v1/public/teams/route";
 
@@ -107,6 +116,8 @@ describe("API route handlers", () => {
     mocks.getSettings.mockReset();
     mocks.listTeams.mockReset();
     mocks.userFindFirst.mockReset();
+    mocks.getClosesAt.mockReset();
+    mocks.getOwnPrediction.mockReset();
     mocks.revalidatePredictionCaches.mockReset();
     mocks.savePrediction.mockReset();
     mocks.auditCount.mockReset();
@@ -303,6 +314,20 @@ describe("API route handlers", () => {
     await expect(response.json()).resolves.toMatchObject({
       success: false,
       error: { code: "PREDICTION_CLOSED" },
+    });
+  });
+
+  it("returns only the authenticated user's prediction", async () => {
+    const matchId = "b105eeea-0e6e-4f29-9d95-6c772c47bb7d";
+    mocks.getApiSession.mockResolvedValue({ user: { id: "user-id", role: "USER" } });
+    mocks.getClosesAt.mockResolvedValue(new Date());
+    mocks.getOwnPrediction.mockResolvedValue([{ userId: "user-id", homeGoals: 2, awayGoals: 1 }]);
+    const response = await getOwnPrediction(request(`/api/v1/matches/${matchId}/prediction`), {
+      params: Promise.resolve({ matchId }),
+    });
+    await expect(response.json()).resolves.toEqual({
+      success: true,
+      data: { userId: "user-id", homeGoals: 2, awayGoals: 1 },
     });
   });
 
