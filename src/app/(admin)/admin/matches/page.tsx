@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
+import { ProcessResultForm } from "@/modules/results/ui/process-result-form";
 
 import { prisma } from "@/lib/prisma";
 
@@ -78,6 +79,7 @@ export default async function MatchesPage() {
                 "Cierre",
                 "Doble",
                 "Pronósticos",
+                "Procesar",
                 "Detalle",
               ].map((x) => (
                 <th key={x} className="px-3 py-3">
@@ -97,6 +99,9 @@ export default async function MatchesPage() {
                 <td className="px-3 py-3">{m.predictionClosesAt.toLocaleString("es-HN")}</td>
                 <td className="px-3 py-3">{m.isDoublePoints ? "Sí" : "No"}</td>
                 <td className="px-3 py-3">{m._count.predictions}</td>
+                <td className="px-3 py-3">
+                  {m.status === "FINISHED_PENDING" ? <ProcessResultForm matchId={m.id} /> : "—"}
+                </td>
                 <td className="px-3 py-3">
                   <details>
                     <summary className="cursor-pointer text-blue-700">Ver detalle</summary>
