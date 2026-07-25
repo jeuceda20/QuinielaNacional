@@ -42,6 +42,14 @@ describe("ProcessMatchResultService", () => {
     ).rejects.toThrow("MATCH_ALREADY_PROCESSED");
   });
 
+  it("reports a conflict while another administrator holds the match lock", async () => {
+    const repository = { process: vi.fn().mockResolvedValue("CONCURRENT_PROCESSING") };
+
+    await expect(
+      new ProcessMatchResultService(repository).execute(context, input, new Date()),
+    ).rejects.toThrow("CONCURRENT_PROCESSING");
+  });
+
   it("rejects decimal and negative official results", () => {
     expect(() => processMatchResultSchema.parse({ ...input, homeGoals: 1.5 })).toThrow();
     expect(() => processMatchResultSchema.parse({ ...input, awayGoals: -1 })).toThrow();

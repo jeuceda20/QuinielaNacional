@@ -14,7 +14,8 @@ export type ProcessMatchResultOutcome =
   | "MATCH_NOT_FOUND"
   | "MATCH_CANCELLED"
   | "MATCH_ALREADY_PROCESSED"
-  | "MATCH_NOT_READY";
+  | "MATCH_NOT_READY"
+  | "CONCURRENT_PROCESSING";
 
 export interface ProcessMatchResultRepository {
   process(
