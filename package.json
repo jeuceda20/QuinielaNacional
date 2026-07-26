@@ -13,7 +13,7 @@
     "prisma:migrate": "prisma migrate dev",
     "db:up": "docker compose --env-file .env.local up -d",
     "db:down": "docker compose --env-file .env.local down",
-    "db:seed": "tsx prisma/seed.ts",
+    "db:seed": "npm run prisma:generate && tsx prisma/seed.ts",
     "db:verify-migrations": "node scripts/verify-migrations.mjs",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
