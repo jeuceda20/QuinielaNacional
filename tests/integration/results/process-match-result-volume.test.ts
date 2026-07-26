@@ -4,6 +4,8 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 
 import { ProcessMatchResultService } from "@/modules/results/application/process-match-result";
 import { PrismaProcessMatchResultRepository } from "@/modules/results/infrastructure/prisma-process-match-result-repository";
+import { RecalculateSeasonService } from "@/modules/standings/application/recalculate-season";
+import { PrismaSeasonRecalculationRepository } from "@/modules/standings/infrastructure/prisma-season-recalculation-repository";
 
 import { createRequestContext } from "@/lib/request-context";
 
@@ -94,6 +96,30 @@ describe.each([50, 100, 500])("result processing with %i participants", (partici
       await expect(prisma.standing.count({ where: { seasonId: season.id } })).resolves.toBe(
         participantCount + 1,
       );
+      await prisma.standing.update({
+        where: { seasonId_userId: { seasonId: season.id, userId: admin.id } },
+        data: { totalPoints: 999 },
+      });
+      await expect(
+        new RecalculateSeasonService(new PrismaSeasonRecalculationRepository(prisma)).execute(
+          createRequestContext({
+            userId: admin.id,
+            role: "SUPER_ADMIN",
+            requestId: `recalculate-${suffix}`,
+          }),
+          season.id,
+          new Date(now.getTime() + 1),
+        ),
+      ).resolves.toEqual({
+        matches: 1,
+        scores: participantCount + 1,
+        standings: participantCount + 1,
+      });
+      await expect(
+        prisma.standing.findUnique({
+          where: { seasonId_userId: { seasonId: season.id, userId: admin.id } },
+        }),
+      ).resolves.toMatchObject({ totalPoints: 0 });
     } finally {
       await prisma.predictionScore.deleteMany({ where: { matchId: match.id } });
       await prisma.standingSnapshot.deleteMany({ where: { seasonId: season.id } });
