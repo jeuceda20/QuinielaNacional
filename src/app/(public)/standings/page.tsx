@@ -23,7 +23,7 @@ export default async function StandingsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="bg-gray-950 text-gray-300">
                 <tr>
-                  {["Posición", "Nickname", "Exactos", "Exactos Jx2", "Parciales", "Puntos", "Tendencia"].map(
+                  {["Posición", "Nickname", "Exactos", "Exactos PJx2", "Parciales", "Puntos", "Tendencia"].map(
                     (label) => (
                       <th key={label} className="px-4 py-3">
                         {label}
@@ -71,7 +71,7 @@ export default async function StandingsPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm">
-                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos Jx2 ·{" "}
+                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos PJx2 ·{" "}
                   {standing.partialCount} parciales
                 </p>
               </article>

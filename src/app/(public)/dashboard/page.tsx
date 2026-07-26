@@ -69,10 +69,10 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-400">Centro de control de tu quiniela.</p>
           </div>
         </div>
-        <div className="mt-4 text-sm text-gray-400 sm:mt-0 sm:text-right">
-          <p>{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos</p>
-          <p className="text-cyan-300">{own?.doublePoints ?? 0} puntos en partidos de jornada</p>
-        </div>
+        <p className="mt-4 text-sm text-gray-400 sm:mt-0 sm:text-right">
+          {own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos · {own?.partialCount ?? 0} parciales ·{" "}
+          <span className="text-cyan-300">{own?.doublePoints ?? 0} puntos PJx2</span>
+        </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
