@@ -79,6 +79,17 @@ export async function seasonAction(f: FormData) {
     });
     if (!updated.count) throw new Error("La temporada no está activa o ya fue cerrada.");
   }
+  else if (action === "archive") {
+    const updated = await prisma.season.updateMany({
+      where: {
+        id: String(f.get("seasonId")),
+        status: { in: ["DRAFT", "CLOSED"] },
+        archivedAt: null,
+      },
+      data: { status: "ARCHIVED", archivedAt: now },
+    });
+    if (!updated.count) throw new Error("Solo se pueden archivar temporadas en borrador o cerradas.");
+  }
   else if (action === "participant")
     await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
       a,

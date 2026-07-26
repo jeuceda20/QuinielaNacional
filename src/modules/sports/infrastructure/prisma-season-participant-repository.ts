@@ -40,7 +40,7 @@ export class PrismaSeasonParticipantRepository implements SeasonParticipantRepos
           create: {
             seasonId,
             userId,
-            position: 0,
+            position: 1,
             totalPoints: 0,
             exactCount: 0,
             partialCount: 0,

@@ -14,7 +14,11 @@ export class PrismaPendingPredictionRepository implements PendingPredictionRepos
         archivedAt: null,
         status: { in: ["SCHEDULED", "RESCHEDULED", "RESUMED"] },
         predictionClosesAt: { gt: now },
-        season: { participants: { some: { userId, isEligible: true, excludedAt: null } } },
+        season: {
+          status: "ACTIVE",
+          archivedAt: null,
+          participants: { some: { userId, isEligible: true, excludedAt: null } },
+        },
         predictions: { none: { userId, deletedAt: null } },
       },
       orderBy: { scheduledAt: "asc" },

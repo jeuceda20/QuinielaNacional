@@ -23,7 +23,7 @@ export default async function DashboardPage() {
   const [pending, own, top, user] = await Promise.all([
     new GetPendingPredictions(new PrismaPendingPredictionRepository()).execute(session.user.id, now),
     prisma.standing.findFirst({
-      where: { userId: session.user.id },
+      where: { userId: session.user.id, season: { status: "ACTIVE", archivedAt: null } },
       select: {
         position: true,
         previousPosition: true,
@@ -34,6 +34,7 @@ export default async function DashboardPage() {
       },
     }),
     prisma.standing.findMany({
+      where: { season: { status: "ACTIVE", archivedAt: null } },
       take: 5,
       orderBy: [{ position: "asc" }, { user: { nickname: "asc" } }],
       select: { position: true, totalPoints: true, user: { select: { nickname: true } } },
