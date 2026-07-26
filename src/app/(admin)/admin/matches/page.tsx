@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
+import { CorrectResultForm } from "@/modules/results/ui/correct-result-form";
 import { ProcessResultForm } from "@/modules/results/ui/process-result-form";
 
 import { prisma } from "@/lib/prisma";
@@ -49,6 +50,7 @@ export default async function MatchesPage({ searchParams }: Props) {
     }),
   ]);
   const now = new Date();
+  const doubleRoundIds = new Set(matches.filter((match) => match.isDoublePoints).map((match) => match.roundId));
   return (
     <section className="w-full space-y-6">
       <div>
@@ -149,11 +151,24 @@ export default async function MatchesPage({ searchParams }: Props) {
                 <td className="px-3 py-3">{m.awayTeam.name}</td>
                 <td className="px-3 py-3">{m.status}</td>
                 <td className="px-3 py-3">{m.predictionClosesAt.toLocaleString("es-HN")}</td>
-                <td className="px-3 py-3">{m.isDoublePoints ? "Sí" : "No"}</td>
+                <td className="px-3 py-3">{m.isDoublePoints ? "🔥 Partido de la jornada" : "—"}</td>
                 <td className="px-3 py-3">{m._count.predictions}</td>
                 <td className="px-3 py-3">
                   {m.status === "FINISHED_PENDING" ? (
                     <ProcessResultForm matchId={m.id} />
+                  ) : m.status === "PROCESSED" && m.officialHomeGoals !== null && m.officialAwayGoals !== null ? (
+                    <div className="space-y-2">
+                      <p className="rounded bg-emerald-400/10 px-2 py-1 text-xs font-semibold text-emerald-200">
+                        Resultado: {m.officialHomeGoals} - {m.officialAwayGoals}
+                      </p>
+                      {s.user.role === "SUPER_ADMIN" && (
+                        <CorrectResultForm
+                          matchId={m.id}
+                          homeGoals={m.officialHomeGoals}
+                          awayGoals={m.officialAwayGoals}
+                        />
+                      )}
+                    </div>
                   ) : ["SCHEDULED", "RESCHEDULED", "CLOSED", "SUSPENDED", "RESUMED"].includes(m.status) ? (
                     <form action={matchAction}>
                       <input type="hidden" name="matchId" value={m.id} />
@@ -201,10 +216,13 @@ export default async function MatchesPage({ searchParams }: Props) {
                       <button name="action" value="reschedule" className="text-left text-yellow-300">
                         Reprogramar
                       </button>
-                      {!m.isDoublePoints && (
+                      {!m.isDoublePoints && !doubleRoundIds.has(m.roundId) && (
                         <button formNoValidate name="action" value="double" className="text-left text-yellow-300">
-                          Designar doble
+                          🔥 Designar partido de la jornada
                         </button>
+                      )}
+                      {!m.isDoublePoints && doubleRoundIds.has(m.roundId) && (
+                        <p className="text-xs text-yellow-200">Esta jornada ya tiene un partido doble.</p>
                       )}
                       {["SCHEDULED", "RESCHEDULED", "CLOSED"].includes(m.status) && (
                         <button name="action" value="suspend" className="text-left text-yellow-300">

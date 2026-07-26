@@ -28,6 +28,7 @@ export default async function PredictionsPage() {
               home: m.homeTeam.name,
               away: m.awayTeam.name,
               double: m.isDoublePoints,
+              scheduledAt: m.scheduledAt.toISOString(),
               closesAt: m.predictionClosesAt.toISOString(),
             }}
           />

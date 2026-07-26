@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { savePredictionAction } from "@/app/(public)/predictions/actions";
 
@@ -9,11 +9,22 @@ type PredictionFormMatch = {
   home: string;
   away: string;
   double: boolean;
+  scheduledAt: string;
   closesAt: string;
 };
 
 export function PredictionForm({ match }: Readonly<{ match: PredictionFormMatch }>) {
   const [message, setMessage] = useState("");
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const minutesUntilStart = Math.max(0, Math.ceil((new Date(match.scheduledAt).getTime() - now) / 60_000));
+  const startCountdown = minutesUntilStart >= 60
+    ? `${Math.floor(minutesUntilStart / 60)} h ${minutesUntilStart % 60} min`
+    : `${minutesUntilStart} min`;
+  const startsSoon = minutesUntilStart <= 30;
 
   return (
     <form
@@ -32,11 +43,14 @@ export function PredictionForm({ match }: Readonly<{ match: PredictionFormMatch 
           {match.home} vs {match.away}
         </strong>
         {match.double && (
-          <span className="rounded-full bg-yellow-400/15 px-3 py-1 text-xs font-semibold text-yellow-200">Partido de la jornada</span>
+          <span className="rounded-full bg-yellow-400/15 px-3 py-1 text-xs font-semibold text-yellow-200">🔥 Partido de la jornada x2</span>
         )}
       </div>
       <p className="text-sm text-gray-400">
         Cierra: {new Date(match.closesAt).toLocaleString("es-HN")}
+      </p>
+      <p className={`rounded-xl border px-3 py-2 text-sm font-semibold ${startsSoon ? "border-red-400/50 bg-red-400/10 text-red-200" : "border-cyan-400/25 bg-cyan-400/10 text-cyan-200"}`}>
+        {startsSoon ? "⚠️ " : ""}Inicia en {startCountdown} · {new Date(match.scheduledAt).toLocaleString("es-HN")}
       </p>
       <input type="hidden" name="matchId" value={match.id} />
       <div className="grid grid-cols-2 gap-3">

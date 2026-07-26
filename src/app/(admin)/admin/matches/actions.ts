@@ -55,8 +55,17 @@ export async function matchAction(f: FormData) {
       }),
       now,
     );
-  else if (action === "double")
-    await new SetDoubleMatch(new PrismaDoubleMatchRepository()).execute(a, id, now);
+  else if (action === "double") {
+    try {
+      await new SetDoubleMatch(new PrismaDoubleMatchRepository()).execute(a, id, now);
+    } catch (error) {
+      if (error instanceof Error && error.message === "CONFLICT") {
+        revalidatePath("/admin/matches");
+        return;
+      }
+      throw error;
+    }
+  }
   else if (action === "suspend")
     await new ManageMatchSuspension(new PrismaMatchSuspensionRepository()).suspend(
       a,

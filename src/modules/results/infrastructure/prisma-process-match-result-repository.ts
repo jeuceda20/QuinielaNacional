@@ -110,14 +110,21 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
 
         const allScores = await tx.predictionScore.findMany({
           where: { seasonId: match.seasonId },
-          select: { userId: true, awardedPoints: true, scoreType: true },
+          select: {
+            userId: true,
+            awardedPoints: true,
+            scoreType: true,
+            match: { select: { isDoublePoints: true } },
+          },
         });
         const totals = new Map(
           participants.map((participant) => [
             participant.userId,
             {
               totalPoints: 0,
+              doublePoints: 0,
               exactCount: 0,
+              doubleExactCount: 0,
               partialCount: 0,
               wrongCount: 0,
               noPredictionCount: 0,
@@ -129,6 +136,10 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
           const total = totals.get(score.userId);
           if (!total) continue;
           total.totalPoints += score.awardedPoints;
+          if (score.match.isDoublePoints) {
+            total.doublePoints += score.awardedPoints;
+            if (score.scoreType === PredictionScoreType.EXACT) total.doubleExactCount += 1;
+          }
           total.matchesScored += 1;
           if (score.scoreType === PredictionScoreType.EXACT) total.exactCount += 1;
           if (score.scoreType === PredictionScoreType.PARTIAL) total.partialCount += 1;
@@ -154,7 +165,9 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
               userId: standing.userId,
               position: standing.position,
               totalPoints: total.totalPoints,
+              doublePoints: total.doublePoints,
               exactCount: total.exactCount,
+              doubleExactCount: total.doubleExactCount,
               partialCount: total.partialCount,
               wrongCount: total.wrongCount,
               noPredictionCount: total.noPredictionCount,
@@ -165,7 +178,9 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
               position: standing.position,
               previousPosition: previousByUser.get(standing.userId)?.position ?? null,
               totalPoints: total.totalPoints,
+              doublePoints: total.doublePoints,
               exactCount: total.exactCount,
+              doubleExactCount: total.doubleExactCount,
               partialCount: total.partialCount,
               wrongCount: total.wrongCount,
               noPredictionCount: total.noPredictionCount,

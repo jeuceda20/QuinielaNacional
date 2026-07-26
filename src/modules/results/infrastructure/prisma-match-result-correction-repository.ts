@@ -92,7 +92,7 @@ export class PrismaMatchResultCorrectionRepository implements MatchResultCorrect
           awardedPoints: true,
           scoreType: true,
           resultVersion: true,
-          match: { select: { resultVersion: true } },
+          match: { select: { resultVersion: true, isDoublePoints: true } },
         },
       });
       const totals = new Map(
@@ -100,7 +100,9 @@ export class PrismaMatchResultCorrectionRepository implements MatchResultCorrect
           participant.userId,
           {
             totalPoints: 0,
+            doublePoints: 0,
             exactCount: 0,
+            doubleExactCount: 0,
             partialCount: 0,
             wrongCount: 0,
             noPredictionCount: 0,
@@ -113,6 +115,10 @@ export class PrismaMatchResultCorrectionRepository implements MatchResultCorrect
         const total = totals.get(score.userId);
         if (!total) continue;
         total.totalPoints += score.awardedPoints;
+        if (score.match.isDoublePoints) {
+          total.doublePoints += score.awardedPoints;
+          if (score.scoreType === PredictionScoreType.EXACT) total.doubleExactCount += 1;
+        }
         total.matchesScored += 1;
         if (score.scoreType === PredictionScoreType.EXACT) total.exactCount += 1;
         if (score.scoreType === PredictionScoreType.PARTIAL) total.partialCount += 1;
