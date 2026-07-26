@@ -15,4 +15,10 @@ export class PrismaEmailVerificationTokenRepository implements EmailVerification
   }): Promise<void> {
     await this.database.emailVerificationToken.create({ data: input });
   }
+  public async invalidateActiveForUser(userId: string, now: Date): Promise<void> {
+    await this.database.emailVerificationToken.updateMany({
+      where: { userId, usedAt: null },
+      data: { usedAt: now },
+    });
+  }
 }

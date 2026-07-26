@@ -77,8 +77,10 @@ export default async function DashboardPage() {
         homeGoals: true,
         awayGoals: true,
         updatedAt: true,
+        scores: { select: { awardedPoints: true, resultVersion: true } },
         match: {
           select: {
+            resultVersion: true,
             scheduledAt: true,
             isDoublePoints: true,
             officialHomeGoals: true,
@@ -199,6 +201,10 @@ export default async function DashboardPage() {
                 </div>
                 <p className="mt-1 text-cyan-200">Tu pronóstico: {prediction.homeGoals} - {prediction.awayGoals}</p>
                 <p className="mt-1 text-gray-400">{prediction.match.officialHomeGoals !== null && prediction.match.officialAwayGoals !== null ? `Resultado oficial: ${prediction.match.officialHomeGoals} - ${prediction.match.officialAwayGoals}` : "Resultado pendiente"}</p>
+                {(() => {
+                  const score = prediction.scores.find((item) => item.resultVersion === prediction.match.resultVersion);
+                  return score ? <p className="mt-1 font-semibold text-emerald-200">Puntos sumados: +{score.awardedPoints}</p> : null;
+                })()}
               </div>
             )) : <p className="text-sm text-gray-400">Todavía no has guardado pronósticos en esta temporada.</p>}
           </div>
