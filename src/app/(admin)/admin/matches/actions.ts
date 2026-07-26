@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
@@ -34,6 +35,7 @@ export async function matchAction(f: FormData) {
     id = String(f.get("matchId")),
     action = String(f.get("action")),
     now = new Date();
+  try {
   if (action === "create")
     await new CreateMatch(new PrismaMatchCreationRepository()).execute(
       a,
@@ -107,5 +109,21 @@ export async function matchAction(f: FormData) {
     });
     if (!updated.count) throw new Error("El partido no puede recibir resultado en su estado actual.");
   }
-  revalidatePath("/admin/matches");
+    revalidatePath("/admin/matches");
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "UNKNOWN";
+    const message = code === "INVALID_SCHEDULE"
+      ? "La fecha y hora del partido debe ser posterior a la hora actual."
+      : code === "CONFLICT"
+        ? "La jornada ya tiene un partido de la jornada asignado."
+        : code === "DUPLICATE"
+          ? "Ya existe un partido con esos datos."
+          : code === "INVALID_STATE"
+            ? "Ese cambio no está permitido con el estado actual del partido."
+            : "No fue posible guardar el cambio. Revisa los datos e inténtalo de nuevo.";
+    const referer = (await headers()).get("referer") ?? "http://localhost:3000/admin/matches";
+    const destination = new URL(referer);
+    destination.searchParams.set("error", message);
+    redirect(destination.toString());
+  }
 }

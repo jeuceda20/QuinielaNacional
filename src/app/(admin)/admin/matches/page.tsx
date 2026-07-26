@@ -11,7 +11,7 @@ import { prisma } from "@/lib/prisma";
 import { seasonAction } from "../seasons/actions";
 import { matchAction } from "./actions";
 
-type Props = Readonly<{ searchParams: Promise<{ season?: string; round?: string }> }>;
+type Props = Readonly<{ searchParams: Promise<{ season?: string; round?: string; error?: string }> }>;
 
 export default async function MatchesPage({ searchParams }: Props) {
   const params = await searchParams;
@@ -60,6 +60,7 @@ export default async function MatchesPage({ searchParams }: Props) {
           Orden cronológico por fecha oficial. Los resultados se gestionan en otra fase.
         </p>
       </div>
+      {params.error && <p role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">{params.error}</p>}
       <form className="grid gap-2 rounded-2xl border border-gray-800 bg-gray-900 p-4 sm:grid-cols-3">
         <select name="season" defaultValue={selectedSeasonId} aria-label="Filtrar por temporada" className="rounded-xl border border-gray-800 p-2">
           <option value="">Sin temporada</option>
