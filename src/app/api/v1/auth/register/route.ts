@@ -21,12 +21,11 @@ export async function POST(request: NextRequest) {
   if (!(await consumeRegistrationRateLimit(getIpAddressFromHeaders(request.headers), now)))
     return apiError(429, "AUTH_RATE_LIMITED", "Demasiados intentos. Inténtalo más tarde.");
   try {
-    const result = await createRegistrationService().execute(parsed.data, now);
+    await createRegistrationService().execute(parsed.data, now);
     return apiSuccess(
       {
-        status: "PENDING_EMAIL_CONFIRMATION",
-        message: "Revisa tu correo para confirmar tu cuenta.",
-        emailSent: result.emailSent,
+        status: "PENDING_APPROVAL",
+        message: "Tu solicitud fue enviada y está pendiente de aprobación por un administrador.",
       },
       201,
     );

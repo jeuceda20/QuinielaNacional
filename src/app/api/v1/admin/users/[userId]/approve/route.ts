@@ -2,7 +2,6 @@ import type { NextRequest } from "next/server";
 
 import { z } from "zod";
 
-import { createAuthEmailProvider } from "@/modules/auth/infrastructure/create-auth-services";
 import { ApproveUser, ApproveUserError } from "@/modules/users/application/approve-user";
 import { PrismaUserApprovalRepository } from "@/modules/users/infrastructure/prisma-user-approval-repository";
 import { PrismaUserRepository } from "@/modules/users/infrastructure/prisma-user-repository";
@@ -25,7 +24,6 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
     const outcome = await new ApproveUser(
       new PrismaUserRepository(),
       new PrismaUserApprovalRepository(),
-      createAuthEmailProvider(),
     ).execute(
       {
         actor: session.user,

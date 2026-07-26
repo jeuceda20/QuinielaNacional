@@ -19,8 +19,6 @@ export async function POST(request: NextRequest) {
       fieldErrors: parsed.error.flatten().fieldErrors,
     });
   const result = await (await createLoginService()).execute(parsed.data, new Date());
-  if (result.status === "PENDING_EMAIL_CONFIRMATION")
-    return apiError(403, "AUTH_EMAIL_NOT_VERIFIED", "Debes confirmar tu correo.");
   if (result.status === "PENDING_APPROVAL")
     return apiError(
       403,

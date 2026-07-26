@@ -1,14 +1,8 @@
-import { createHash, randomBytes } from "node:crypto";
-
 import type { PasswordHasher } from "@/modules/auth/domain/password-hasher";
 import type { RegisterInput } from "@/modules/auth/schemas/register-input";
 import type { EmailProvider } from "@/modules/email/domain/email-provider";
 import type { TeamRepository } from "@/modules/sports/domain/sports-repositories";
 import type { UserRepository } from "@/modules/users/domain/user-repository";
-
-export type EmailVerificationTokenRepository = Readonly<{
-  create(input: { userId: string; tokenHash: string; expiresAt: Date }): Promise<void>;
-}>;
 
 export class RegistrationError extends Error {
   public constructor(
@@ -19,16 +13,21 @@ export class RegistrationError extends Error {
   }
 }
 
-export type RegisterUserResult = Readonly<{ userId: string; emailSent: boolean }>;
+export type RegisterUserResult = Readonly<{ userId: string; emailSent: false }>;
+
+/** Kept temporarily so existing integrations can construct the service while SMTP is disabled. */
+export type EmailVerificationTokenRepository = Readonly<{
+  create(input: { userId: string; tokenHash: string; expiresAt: Date }): Promise<void>;
+}>;
 
 export class RegisterUser {
   public constructor(
     private readonly users: UserRepository,
     private readonly teams: TeamRepository,
     private readonly passwordHasher: PasswordHasher,
-    private readonly verificationTokens: EmailVerificationTokenRepository,
-    private readonly emailProvider: EmailProvider,
-    private readonly appUrl: string,
+    _verificationTokens?: EmailVerificationTokenRepository,
+    _emailProvider?: EmailProvider,
+    _appUrl?: string,
   ) {}
 
   public async execute(input: RegisterInput, now: Date): Promise<RegisterUserResult> {
@@ -52,26 +51,8 @@ export class RegisterUser {
       emailNormalized,
       passwordHash,
       favoriteTeamId: team.id,
-      status: "PENDING_EMAIL_CONFIRMATION",
+      status: "PENDING_APPROVAL",
     });
-    const token = randomBytes(32).toString("base64url");
-    await this.verificationTokens.create({
-      userId: user.id,
-      tokenHash: createHash("sha256").update(token).digest("hex"),
-      expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1000),
-    });
-    try {
-      await this.emailProvider.sendVerificationEmail({
-        recipient: user.email,
-        recipientName: user.firstName,
-        verificationUrl: new URL(
-          `/confirm-email?token=${encodeURIComponent(token)}`,
-          this.appUrl,
-        ).toString(),
-      });
-      return { userId: user.id, emailSent: true };
-    } catch {
-      return { userId: user.id, emailSent: false };
-    }
+    return { userId: user.id, emailSent: false };
   }
 }

@@ -162,7 +162,7 @@ model User {
   emailNormalized    String     @unique @db.VarChar(254)
   passwordHash       String
   role               UserRole   @default(USER)
-  status             UserStatus @default(PENDING_EMAIL_CONFIRMATION)
+  status             UserStatus @default(PENDING_APPROVAL)
   emailVerifiedAt    DateTime?  @db.Timestamptz(6)
   approvedAt         DateTime?  @db.Timestamptz(6)
   approvedById       String?    @db.Uuid

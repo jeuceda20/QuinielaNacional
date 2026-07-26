@@ -138,6 +138,16 @@ export function AdminUsersTable({
                         )}
                         {u.status === "APPROVED" && (
                           <>
+                            <input
+                              name="temporaryPassword"
+                              type="password"
+                              minLength={12}
+                              placeholder="Contraseña temporal (12+)"
+                              className="rounded border border-gray-800 p-1"
+                            />
+                            <button name="action" value="RESET_PASSWORD" className="text-left text-amber-300">
+                              Restablecer contraseña
+                            </button>
                             <button name="action" value="BLOCK" className="text-left text-red-700">
                               Bloquear
                             </button>

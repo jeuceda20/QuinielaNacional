@@ -15,7 +15,7 @@ export interface LoginRateLimiter {
   consume(ipAddress: string | null, emailNormalized: string, now: Date): Promise<boolean>;
 }
 export type LoginResult = Readonly<{
-  status: "AUTHENTICATED" | "PENDING_EMAIL_CONFIRMATION" | "PENDING_APPROVAL" | "INVALID";
+  status: "AUTHENTICATED" | "PENDING_APPROVAL" | "INVALID";
   token?: string;
   expiresAt?: Date;
 }>;
@@ -38,8 +38,6 @@ export class LoginUser {
       user?.passwordHash ?? this.fallbackPasswordHash,
     );
     if (!user || !passwordValid) return { status: "INVALID" };
-    if (user.status === "PENDING_EMAIL_CONFIRMATION")
-      return { status: "PENDING_EMAIL_CONFIRMATION" };
     if (user.status !== "APPROVED")
       return { status: user.status === "PENDING_APPROVAL" ? "PENDING_APPROVAL" : "INVALID" };
     const session = await this.sessions.create({

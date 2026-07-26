@@ -26,7 +26,7 @@ export class PrismaUserApprovalRepository implements UserApprovalRepository {
       });
       if (!user) return { status: "NOT_FOUND" };
       if (user.status === "APPROVED") return { status: "ALREADY_APPROVED" };
-      if (user.status !== "PENDING_APPROVAL" || !user.emailVerifiedAt)
+      if (user.status !== "PENDING_APPROVAL")
         return { status: "INVALID_STATE" };
 
       let seasonId: string | null = null;
@@ -40,7 +40,7 @@ export class PrismaUserApprovalRepository implements UserApprovalRepository {
       }
 
       const updated = await transaction.user.updateMany({
-        where: { id: user.id, status: "PENDING_APPROVAL", emailVerifiedAt: { not: null } },
+        where: { id: user.id, status: "PENDING_APPROVAL" },
         data: { status: "APPROVED", approvedAt: input.now, approvedById: input.actor.id },
       });
       if (updated.count !== 1) return { status: "INVALID_STATE" };

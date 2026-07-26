@@ -30,15 +30,18 @@ export async function registerAction(
       message: "Revisa los datos ingresados.",
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
+
   const now = new Date();
-  const allowed = await consumeRegistrationRateLimit(await getRequestIpAddress(), now);
-  if (!allowed)
-    return { success: false, message: "Demasiados intentos. IntÃ©ntalo nuevamente mÃ¡s tarde." };
+  if (!(await consumeRegistrationRateLimit(await getRequestIpAddress(), now)))
+    return { success: false, message: "Demasiados intentos. Inténtalo nuevamente más tarde." };
+
   try {
-    const result = await createRegistrationService().execute(parsed.data, now);
-    return result.emailSent
-      ? { success: true, message: "Te enviamos un correo de confirmación. Revisa Recibidos y Spam." }
-      : { success: false, message: "La cuenta fue creada, pero no pudimos enviar el correo. En Iniciar sesión usa Reenviar correo de confirmación." };
+    await createRegistrationService().execute(parsed.data, now);
+    return {
+      success: true,
+      message:
+        "Tu solicitud fue enviada. Un administrador debe aprobar tu acceso antes de que puedas iniciar sesión.",
+    };
   } catch (error) {
     if (error instanceof RegistrationError)
       return {
@@ -48,9 +51,6 @@ export async function registerAction(
             ? "El equipo seleccionado no está disponible."
             : "El correo o nickname ya está en uso.",
       };
-    return {
-      success: false,
-      message: "No fue posible completar el registro. Inténtalo nuevamente.",
-    };
+    return { success: false, message: "No fue posible completar el registro. Inténtalo nuevamente." };
   }
 }

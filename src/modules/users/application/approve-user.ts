@@ -67,7 +67,7 @@ export class ApproveUser {
   public constructor(
     private readonly users: UserRepository,
     private readonly approvals: UserApprovalRepository,
-    private readonly emails: EmailProvider,
+    _emails?: EmailProvider,
   ) {}
 
   public async execute(input: ApproveUserInput, now: Date): Promise<{ alreadyApproved: boolean }> {
@@ -96,14 +96,6 @@ export class ApproveUser {
     if (result.status === "ALREADY_APPROVED") return { alreadyApproved: true };
     if (result.status !== "APPROVED") throw new ApproveUserError("INVALID_USER_STATE");
 
-    try {
-      await this.emails.sendAccountApprovedEmail({
-        recipient: result.user.email,
-        recipientName: result.user.firstName,
-      });
-    } catch {
-      // The approval has already committed and must not be reverted because SMTP failed.
-    }
     return { alreadyApproved: false };
   }
 }
