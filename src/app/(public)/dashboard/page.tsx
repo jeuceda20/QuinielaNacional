@@ -24,7 +24,14 @@ export default async function DashboardPage() {
     new GetPendingPredictions(new PrismaPendingPredictionRepository()).execute(session.user.id, now),
     prisma.standing.findFirst({
       where: { userId: session.user.id },
-      select: { position: true, previousPosition: true, totalPoints: true, exactCount: true, partialCount: true },
+      select: {
+        position: true,
+        previousPosition: true,
+        totalPoints: true,
+        doublePoints: true,
+        exactCount: true,
+        partialCount: true,
+      },
     }),
     prisma.standing.findMany({
       take: 5,
@@ -52,7 +59,10 @@ export default async function DashboardPage() {
             <p className="text-sm text-gray-400">Centro de control de tu quiniela.</p>
           </div>
         </div>
-        <p className="mt-4 text-sm text-gray-400 sm:mt-0">{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos</p>
+        <div className="mt-4 text-sm text-gray-400 sm:mt-0 sm:text-right">
+          <p>{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos</p>
+          <p className="text-cyan-300">{own?.doublePoints ?? 0} puntos en partidos de jornada</p>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -97,7 +107,8 @@ export default async function DashboardPage() {
           </article>
           <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
             <h2 className="font-semibold">Reglas rápidas</h2>
-            <p className="mt-2 text-sm text-gray-400">Parcial: 1 punto. Exacto: 3 puntos. Los partidos dobles valen el doble.</p>
+            <p className="mt-2 text-sm text-gray-400">Parcial: 1 punto. Exacto: 3 puntos. El partido de la jornada vale doble.</p>
+            <p className="mt-2 text-sm text-gray-400">Desempates: puntos totales, resultados exactos y exactos en partidos de jornada.</p>
           </article>
           <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
             <h2 className="font-semibold">Top 5</h2>

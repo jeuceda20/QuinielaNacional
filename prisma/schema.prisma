@@ -521,7 +521,9 @@ model Standing {
   position          Int
   previousPosition  Int?
   totalPoints       Int      @default(0)
+  doublePoints      Int      @default(0)
   exactCount        Int      @default(0)
+  doubleExactCount  Int      @default(0)
   partialCount      Int      @default(0)
   wrongCount        Int      @default(0)
   noPredictionCount Int      @default(0)
@@ -534,7 +536,7 @@ model Standing {
 
   @@unique([seasonId, userId])
   @@index([seasonId, position])
-  @@index([seasonId, totalPoints, exactCount])
+  @@index([seasonId, totalPoints, exactCount, doubleExactCount])
 }
 
 model StandingSnapshot {

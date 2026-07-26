@@ -75,12 +75,17 @@ export class PrismaSeasonRecalculationRepository implements SeasonRecalculationR
       });
       await tx.predictionScore.deleteMany({ where: { seasonId: season.id } });
       if (scoreRows.length) await tx.predictionScore.createMany({ data: scoreRows });
+      const doubleMatchIds = new Set(
+        matches.filter((match) => match.isDoublePoints).map((match) => match.id),
+      );
       const totals = new Map(
         participants.map((participant) => [
           participant.userId,
           {
             totalPoints: 0,
+            doublePoints: 0,
             exactCount: 0,
+            doubleExactCount: 0,
             partialCount: 0,
             wrongCount: 0,
             noPredictionCount: 0,
@@ -91,6 +96,10 @@ export class PrismaSeasonRecalculationRepository implements SeasonRecalculationR
       for (const score of scoreRows) {
         const total = totals.get(score.userId)!;
         total.totalPoints += score.awardedPoints;
+        if (doubleMatchIds.has(score.matchId)) {
+          total.doublePoints += score.awardedPoints;
+          if (score.scoreType === PredictionScoreType.EXACT) total.doubleExactCount++;
+        }
         total.matchesScored += 1;
         if (score.scoreType === PredictionScoreType.EXACT) total.exactCount++;
         if (score.scoreType === PredictionScoreType.PARTIAL) total.partialCount++;

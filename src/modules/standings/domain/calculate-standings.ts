@@ -3,6 +3,7 @@ export type StandingParticipant = {
   nickname: string;
   totalPoints: number;
   exactCount: number;
+  doubleExactCount?: number;
   partialCount: number;
 };
 
@@ -26,7 +27,12 @@ function validateParticipant(participant: StandingParticipant): void {
     throw new InvalidStandingInputError("nickname must not be empty.");
   }
 
-  const counters = [participant.totalPoints, participant.exactCount, participant.partialCount];
+  const counters = [
+    participant.totalPoints,
+    participant.exactCount,
+    participant.doubleExactCount ?? 0,
+    participant.partialCount,
+  ];
 
   if (counters.some((value) => !Number.isInteger(value) || value < 0)) {
     throw new InvalidStandingInputError("Points and score counters must be non-negative integers.");
@@ -40,6 +46,10 @@ function compareParticipants(left: StandingParticipant, right: StandingParticipa
 
   if (left.exactCount !== right.exactCount) {
     return right.exactCount - left.exactCount;
+  }
+
+  if ((left.doubleExactCount ?? 0) !== (right.doubleExactCount ?? 0)) {
+    return (right.doubleExactCount ?? 0) - (left.doubleExactCount ?? 0);
   }
 
   const normalizedLeftNickname = left.nickname.toLowerCase();
@@ -57,7 +67,11 @@ function compareParticipants(left: StandingParticipant, right: StandingParticipa
 }
 
 function sharesSportingPosition(left: StandingParticipant, right: StandingParticipant): boolean {
-  return left.totalPoints === right.totalPoints && left.exactCount === right.exactCount;
+  return (
+    left.totalPoints === right.totalPoints &&
+    left.exactCount === right.exactCount &&
+    (left.doubleExactCount ?? 0) === (right.doubleExactCount ?? 0)
+  );
 }
 
 export function calculateStandings(

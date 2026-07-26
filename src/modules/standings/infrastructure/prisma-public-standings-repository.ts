@@ -22,6 +22,7 @@ export class PrismaPublicStandingsRepository implements PublicStandingsRepositor
             previousPosition: true,
             totalPoints: true,
             exactCount: true,
+            doubleExactCount: true,
             partialCount: true,
             user: { select: { nickname: true } },
           },
@@ -33,6 +34,7 @@ export class PrismaPublicStandingsRepository implements PublicStandingsRepositor
       nickname: standing.user.nickname,
       partialCount: standing.partialCount,
       exactCount: standing.exactCount,
+      doubleExactCount: standing.doubleExactCount,
       totalPoints: standing.totalPoints,
       previousPosition: standing.previousPosition,
     }));

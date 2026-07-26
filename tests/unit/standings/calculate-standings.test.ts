@@ -51,6 +51,32 @@ describe("calculateStandings", () => {
     ]);
   });
 
+  it("uses exact predictions in matches of the round as the third sporting tiebreaker", () => {
+    const standings = calculateStandings([
+      {
+        userId: "user-1",
+        nickname: "Ana",
+        totalPoints: 18,
+        exactCount: 4,
+        doubleExactCount: 0,
+        partialCount: 3,
+      },
+      {
+        userId: "user-2",
+        nickname: "Beto",
+        totalPoints: 18,
+        exactCount: 4,
+        doubleExactCount: 1,
+        partialCount: 1,
+      },
+    ]);
+
+    expect(standings.map(({ nickname, position }) => ({ nickname, position }))).toEqual([
+      { nickname: "Beto", position: 1 },
+      { nickname: "Ana", position: 2 },
+    ]);
+  });
+
   it("rejects duplicate users and invalid counters", () => {
     expect(() =>
       calculateStandings([

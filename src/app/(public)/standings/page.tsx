@@ -23,7 +23,7 @@ export default async function StandingsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="bg-gray-950 text-gray-300">
                 <tr>
-                  {["Posición", "Nickname", "Parciales", "Exactos", "Puntos", "Tendencia"].map(
+                  {["Posición", "Nickname", "Parciales", "Exactos", "Exactos jornada", "Puntos", "Tendencia"].map(
                     (label) => (
                       <th key={label} className="px-4 py-3">
                         {label}
@@ -39,6 +39,7 @@ export default async function StandingsPage() {
                     <td className="px-4 py-3">{standing.nickname}</td>
                     <td className="px-4 py-3">{standing.partialCount}</td>
                     <td className="px-4 py-3">{standing.exactCount}</td>
+                    <td className="px-4 py-3 text-cyan-300">{standing.doubleExactCount}</td>
                     <td className="px-4 py-3">{standing.totalPoints}</td>
                     <td className="px-4 py-3">
                       {trendLabel(
@@ -70,7 +71,7 @@ export default async function StandingsPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm">
-                  {standing.totalPoints} puntos · {standing.exactCount} exactos ·{" "}
+                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos de jornada ·{" "}
                   {standing.partialCount} parciales
                 </p>
               </article>

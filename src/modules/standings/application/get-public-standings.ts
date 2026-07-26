@@ -3,6 +3,7 @@ export type PublicStanding = Readonly<{
   nickname: string;
   partialCount: number;
   exactCount: number;
+  doubleExactCount: number;
   totalPoints: number;
   previousPosition: number | null;
 }>;
