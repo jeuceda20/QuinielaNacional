@@ -15,7 +15,7 @@ type PredictionFormMatch = Readonly<{
   away: string;
   officialHomeGoals: number | null;
   officialAwayGoals: number | null;
-  ownPrediction: Readonly<{ homeGoals: number; awayGoals: number }> | null;
+  ownPrediction: Readonly<{ homeGoals: number; awayGoals: number; awardedPoints: number | null }> | null;
 }>;
 
 function formatCountdown(minutes: number) {
@@ -75,6 +75,7 @@ export function PredictionForm({ match }: Readonly<{ match: PredictionFormMatch 
         <label className="grid gap-1 text-sm text-gray-300"><span className="truncate">{match.away}</span><input name="awayGoals" type="number" min="0" max="20" required value={awayGoals} onChange={(event) => setAwayGoals(event.target.value)} disabled={isClosed} className="w-full rounded-xl border border-gray-800 bg-gray-950 p-3 text-center text-xl font-bold text-white disabled:cursor-not-allowed disabled:opacity-50" /></label>
       </div>
       {officialResult && <p className="rounded-xl border border-emerald-400/25 bg-emerald-400/10 p-3 text-center text-sm font-semibold text-emerald-200">Resultado oficial: {match.officialHomeGoals} - {match.officialAwayGoals}</p>}
+      {match.ownPrediction?.awardedPoints !== null && match.ownPrediction?.awardedPoints !== undefined && <p className="text-center text-sm font-semibold text-emerald-200">Puntos sumados: +{match.ownPrediction.awardedPoints}</p>}
       {!isClosed && <button className="rounded-xl bg-blue-600 p-3 font-semibold text-white transition hover:bg-blue-500">{hasPick ? "Actualizar pronóstico" : "Guardar pronóstico"}</button>}
       {message && <p role="status" className="text-sm text-cyan-200">{message}</p>}
     </form>

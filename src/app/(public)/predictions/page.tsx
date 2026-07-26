@@ -19,7 +19,7 @@ type MatchCard = Readonly<{
   away: string;
   officialHomeGoals: number | null;
   officialAwayGoals: number | null;
-  ownPrediction: Readonly<{ homeGoals: number; awayGoals: number }> | null;
+  ownPrediction: Readonly<{ homeGoals: number; awayGoals: number; awardedPoints: number | null }> | null;
 }>;
 
 function groupByDayAndPhase(matches: readonly MatchCard[]) {
@@ -59,6 +59,7 @@ export default async function PredictionsPage() {
       scheduledAt: true,
       predictionClosesAt: true,
       status: true,
+      resultVersion: true,
       isDoublePoints: true,
       officialHomeGoals: true,
       officialAwayGoals: true,
@@ -67,7 +68,7 @@ export default async function PredictionsPage() {
       awayTeam: { select: { name: true } },
       predictions: {
         where: { userId: session.user.id, deletedAt: null },
-        select: { homeGoals: true, awayGoals: true },
+        select: { homeGoals: true, awayGoals: true, scores: { select: { awardedPoints: true, resultVersion: true } } },
         take: 1,
       },
     },
@@ -83,7 +84,13 @@ export default async function PredictionsPage() {
     away: match.awayTeam.name,
     officialHomeGoals: match.officialHomeGoals,
     officialAwayGoals: match.officialAwayGoals,
-    ownPrediction: match.predictions[0] ?? null,
+    ownPrediction: match.predictions[0]
+      ? {
+          homeGoals: match.predictions[0].homeGoals,
+          awayGoals: match.predictions[0].awayGoals,
+          awardedPoints: match.predictions[0].scores.find((score) => score.resultVersion === match.resultVersion)?.awardedPoints ?? null,
+        }
+      : null,
   }));
   const activeGroups = groupByDayAndPhase(matches.filter((match) => match.status !== "PROCESSED"));
   const historyGroups = groupByDayAndPhase(matches.filter((match) => match.status === "PROCESSED").reverse());
