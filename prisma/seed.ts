@@ -16,18 +16,18 @@ const prisma = new PrismaClient({
 });
 
 const teams = [
-  { name: "Olimpia", shortName: "Olimpia", slug: "olimpia", displayOrder: 1 },
-  { name: "Motagua", shortName: "Motagua", slug: "motagua", displayOrder: 2 },
-  { name: "Real España", shortName: "Real España", slug: "real-espana", displayOrder: 3 },
-  { name: "Marathón", shortName: "Marathón", slug: "marathon", displayOrder: 4 },
-  { name: "Victoria", shortName: "Victoria", slug: "victoria", displayOrder: 5 },
-  { name: "Génesis", shortName: "Génesis", slug: "genesis", displayOrder: 6 },
-  { name: "Juticalpa", shortName: "Juticalpa", slug: "juticalpa", displayOrder: 7 },
-  { name: "Lobos UPNFM", shortName: "Lobos", slug: "lobos-upnfm", displayOrder: 8 },
-  { name: "Olancho", shortName: "Olancho", slug: "olancho", displayOrder: 9 },
-  { name: "Real Sociedad", shortName: "Real Sociedad", slug: "real-sociedad", displayOrder: 10 },
-  { name: "Platense", shortName: "Platense", slug: "platense", displayOrder: 11 },
-  { name: "Choloma", shortName: "Choloma", slug: "choloma", displayOrder: 12 },
+  { name: "🦁 Leones", shortName: "Leones", slug: "olimpia", displayOrder: 1 },
+  { name: "🦅 Aguilas", shortName: "Aguilas", slug: "motagua", displayOrder: 2 },
+  { name: "🚂 Makina", shortName: "Makina", slug: "real-espana", displayOrder: 3 },
+  { name: "🦕 Verdolagas", shortName: "Verdolagas", slug: "marathon", displayOrder: 4 },
+  { name: "🐆 Panteras", shortName: "Panteras", slug: "victoria", displayOrder: 5 },
+  { name: "🐶 K9", shortName: "K9", slug: "genesis", displayOrder: 6 },
+  { name: "🟢 Juti-Juti", shortName: "Juti-Juti", slug: "juticalpa", displayOrder: 7 },
+  { name: "🐺 Lobos", shortName: "Lobos", slug: "lobos-upnfm", displayOrder: 8 },
+  { name: "🐎 Potros", shortName: "Potros", slug: "olancho", displayOrder: 9 },
+  { name: "🔴 Red Star", shortName: "Red Star", slug: "real-sociedad", displayOrder: 10 },
+  { name: "🦈 Tiburon", shortName: "Tiburon", slug: "platense", displayOrder: 11 },
+  { name: "🧵 Maquileros", shortName: "Maquileros", slug: "choloma", displayOrder: 12 },
 ];
 
 type SeedSetting = {
