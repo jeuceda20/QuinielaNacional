@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: quiniela_nacional_test
+          POSTGRES_USER: quiniela_test
+          POSTGRES_PASSWORD: quiniela_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U quiniela_test -d quiniela_nacional_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      APP_URL: http://127.0.0.1:3000
+      APP_TIMEZONE: America/Tegucigalpa
+      DATABASE_URL: postgresql://quiniela_test:quiniela_test@localhost:5432/quiniela_nacional_test
+      DATABASE_URL_TEST: postgresql://quiniela_test:quiniela_test@localhost:5432/quiniela_nacional_test
+      DIRECT_DATABASE_URL: postgresql://quiniela_test:quiniela_test@localhost:5432/quiniela_nacional_test
+      SESSION_SECRET: ci-session-secret
+      INITIAL_SETUP_TOKEN: ci-initial-setup-token
+      SMTP_HOST: smtp.example.invalid
+      SMTP_PORT: 587
+      SMTP_USER: ci
+      SMTP_APP_PASSWORD: ci
+      ENABLE_DIAGNOSTICS: "false"
+      ENABLE_SQL_CONSOLE: "false"
+      ENABLE_SQL_WRITE: "false"
+      ENABLE_TEST_DATA_TOOLS: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run test:integration
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
