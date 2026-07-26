@@ -10,8 +10,8 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
             <h1 className="font-bold">Panel de administración</h1>
           </div>
           <nav aria-label="Navegación de administración" className="flex flex-wrap items-center gap-1 text-sm font-medium">
-            <Link href="/admin/matches" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Partidos</Link>
-            <Link href="/admin/seasons" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Jornadas</Link>
+            <Link href="/admin/seasons" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Temporadas</Link>
+            <Link href="/admin/matches" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Jornadas y partidos</Link>
             <Link href="/admin/users" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Usuarios</Link>
             <Link href="/dashboard" className="rounded-full border border-gray-700 px-3 py-2 text-gray-300 hover:border-yellow-300 hover:text-yellow-200">Volver al inicio</Link>
           </nav>

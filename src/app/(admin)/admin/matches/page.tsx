@@ -7,12 +7,13 @@ import { ProcessResultForm } from "@/modules/results/ui/process-result-form";
 
 import { prisma } from "@/lib/prisma";
 
+import { seasonAction } from "../seasons/actions";
 import { matchAction } from "./actions";
 export default async function MatchesPage() {
   const t = (await cookies()).get("session")?.value,
     s = t ? await new SessionService(new PrismaSessionRepository()).validate(t, new Date()) : null;
   if (!s || (s.user.role !== "ADMIN" && s.user.role !== "SUPER_ADMIN")) redirect("/login");
-  const [matches, teams, rounds] = await Promise.all([
+  const [matches, teams, rounds, seasons] = await Promise.all([
     prisma.match.findMany({
       where: { archivedAt: null },
       orderBy: { scheduledAt: "asc" },
@@ -33,16 +34,27 @@ export default async function MatchesPage() {
       orderBy: { displayOrder: "asc" },
     }),
     prisma.round.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" } }),
+    prisma.season.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, name: true, status: true } }),
   ]);
   const now = new Date();
   return (
     <section className="w-full space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Partidos</h1>
+        <h1 className="text-2xl font-bold">Jornadas y partidos</h1>
         <p className="text-sm text-gray-400">
           Orden cronológico por fecha oficial. Los resultados se gestionan en otra fase.
         </p>
       </div>
+      <form action={seasonAction} className="grid gap-2 rounded-2xl border border-yellow-400/25 bg-gray-900 p-4 shadow-xl sm:grid-cols-3">
+        <input type="hidden" name="action" value="round" />
+        <select name="seasonId" aria-label="Temporada para jornada" required className="rounded-xl border border-gray-800 p-2">
+          <option value="">Temporada</option>
+          {seasons.map((season) => <option key={season.id} value={season.id}>{season.name} · {season.status}</option>)}
+        </select>
+        <input name="roundName" aria-label="Nombre de jornada" placeholder="Ej.: Jornada 1" required className="rounded-xl border border-gray-800 p-2" />
+        <button className="rounded-xl border border-yellow-400/50 px-3 py-2 font-semibold text-yellow-200 hover:bg-yellow-400/10">Crear jornada</button>
+        <p className="text-xs text-gray-400 sm:col-span-3">El número de jornada se asigna automáticamente según el orden de creación.</p>
+      </form>
       <form action={matchAction} className="grid gap-2 rounded-2xl border border-yellow-400/25 bg-gray-900 p-4 shadow-xl sm:grid-cols-5">
         <input type="hidden" name="action" value="create" />
         <select name="roundId" aria-label="Jornada" required className="rounded-xl border border-gray-800 p-2">

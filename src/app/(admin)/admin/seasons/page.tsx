@@ -8,139 +8,40 @@ import { RecalculateSeasonForm } from "@/modules/standings/ui/recalculate-season
 import { prisma } from "@/lib/prisma";
 
 import { seasonAction } from "./actions";
+
 export default async function SeasonsPage() {
-  const t = (await cookies()).get("session")?.value,
-    s = t ? await new SessionService(new PrismaSessionRepository()).validate(t, new Date()) : null;
-  if (!s || (s.user.role !== "ADMIN" && s.user.role !== "SUPER_ADMIN")) redirect("/login");
+  const token = (await cookies()).get("session")?.value;
+  const session = token ? await new SessionService(new PrismaSessionRepository()).validate(token, new Date()) : null;
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) redirect("/login");
   const seasons = await prisma.season.findMany({
     where: { archivedAt: null },
     orderBy: { createdAt: "desc" },
-    include: {
-      rounds: { where: { archivedAt: null }, orderBy: { sequence: "asc" } },
-      participants: {
-        include: {
-          user: { select: { nickname: true, firstName: true, lastName: true, status: true } },
-        },
-        take: 20,
-      },
-      _count: { select: { standings: true } },
-    },
+    include: { _count: { select: { rounds: true, matches: true, standings: true } } },
   });
+
   return (
     <section className="w-full space-y-6">
-      <h1 className="text-2xl font-bold">Temporadas y jornadas</h1>
-      <form
-        action={seasonAction}
-        className="grid gap-2 rounded-2xl border border-yellow-400/25 bg-gray-900 p-4 shadow-xl sm:grid-cols-4"
-      >
+      <div>
+        <h1 className="text-2xl font-bold">Temporadas</h1>
+        <p className="text-sm text-gray-400">Crea, activa y controla las temporadas. El identificador técnico se genera automáticamente.</p>
+      </div>
+      <form action={seasonAction} className="grid gap-3 rounded-2xl border border-yellow-400/25 bg-gray-900 p-5 shadow-xl sm:grid-cols-3">
         <input type="hidden" name="action" value="create" />
-        <input
-          name="name"
-          aria-label="Nombre de temporada"
-          placeholder="Nombre de temporada"
-          required
-          className="rounded-xl border border-gray-800 p-2"
-        />
-        <input
-          name="slug"
-          aria-label="Slug de temporada"
-          placeholder="slug-temporada"
-          required
-          className="rounded-xl border border-gray-800 p-2"
-        />
-        <input
-          name="startsAt"
-          aria-label="Fecha de inicio"
-          type="date"
-          required
-          className="rounded-xl border border-gray-800 p-2"
-        />
-        <button className="rounded-xl bg-yellow-400 p-2 font-semibold text-gray-950 hover:bg-yellow-300">Crear borrador</button>
+        <input name="name" aria-label="Nombre de temporada" placeholder="Ej.: Apertura 2026" required className="rounded-xl border border-gray-800 p-2" />
+        <input name="startsAt" aria-label="Fecha de inicio" type="date" required className="rounded-xl border border-gray-800 p-2" />
+        <button className="rounded-xl bg-yellow-400 p-2 font-semibold text-gray-950 hover:bg-yellow-300">Crear temporada</button>
       </form>
-      {seasons.map((x) => (
-        <article key={x.id} className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
-          <h2 className="font-bold">
-            {x.name} <span className="text-sm font-normal">Estado: {x.status}</span>
-          </h2>
-          <form action={seasonAction} className="mt-3 flex flex-wrap gap-2">
-            <input type="hidden" name="seasonId" value={x.id} />
-            {x.status === "DRAFT" && (
-              <button
-                name="action"
-                value="activate"
-                className="rounded-xl bg-yellow-400 px-3 py-2 font-semibold text-gray-950 hover:bg-yellow-300"
-              >
-                Activar temporada
-              </button>
-            )}
-            <input
-              name="userId"
-              aria-label="ID de usuario"
-              placeholder="ID de usuario"
-              className="rounded-xl border border-gray-800 p-2"
-            />
-            <button name="action" value="participant" className="rounded-xl border border-gray-700 px-3 hover:border-yellow-300">
-              Incorporar participante
-            </button>
-          </form>
-          <form action={seasonAction} className="mt-3 flex flex-wrap gap-2">
-            <input type="hidden" name="action" value="round" />
-            <input type="hidden" name="seasonId" value={x.id} />
-            <input
-              name="roundName"
-              placeholder="Nombre de jornada"
-              required
-              className="rounded-xl border border-gray-800 p-2"
-            />
-            <input
-              name="roundSlug"
-              placeholder="slug-jornada"
-              required
-              className="rounded-xl border border-gray-800 p-2"
-            />
-            <input
-              name="sequence"
-              type="number"
-              defaultValue="1"
-              className="w-20 rounded-xl border border-gray-800 p-2"
-            />
-            <button className="rounded-xl border border-gray-700 px-3 hover:border-yellow-300">Crear jornada</button>
-          </form>
-          <h3 className="mt-4 font-semibold">Jornadas</h3>
-          <ul className="mt-2 space-y-2">
-            {x.rounds.map((r) => (
-              <li key={r.id} className="flex gap-2">
-                {r.name} — {r.status}
-                <form action={seasonAction}>
-                  <input type="hidden" name="roundId" value={r.id} />
-                  {r.status === "DRAFT" && (
-                    <button name="action" value="publish" className="ml-2 text-blue-700">
-                      Publicar
-                    </button>
-                  )}
-                  {r.status !== "ARCHIVED" && (
-                    <button name="action" value="archive" className="ml-2 text-red-700">
-                      Archivar
-                    </button>
-                  )}
-                </form>
-              </li>
-            ))}
-          </ul>
-          <h3 className="mt-4 font-semibold">Participantes</h3>
-          <ul>
-            {x.participants.map((p) => (
-              <li key={p.id}>
-                {p.user.nickname} — {p.user.firstName} {p.user.lastName} — {p.user.status} —{" "}
-                {p.joinedAt.toLocaleDateString("es-HN")} — 0 puntos iniciales
-              </li>
-            ))}
-          </ul>
-          {s.user.role === "SUPER_ADMIN" && (
-            <RecalculateSeasonForm seasonId={x.id} standingCount={x._count.standings} />
-          )}
-        </article>
-      ))}
+      <div className="grid gap-4">
+        {seasons.map((season) => (
+          <article key={season.id} className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div><h2 className="font-bold">{season.name}</h2><p className="text-sm text-gray-400">{season._count.rounds} jornadas · {season._count.matches} partidos · Estado: {season.status}</p></div>
+              {season.status === "DRAFT" && <form action={seasonAction}><input type="hidden" name="seasonId" value={season.id} /><button name="action" value="activate" className="rounded-xl bg-yellow-400 px-3 py-2 font-semibold text-gray-950">Activar temporada</button></form>}
+            </div>
+            {session.user.role === "SUPER_ADMIN" && <div className="mt-4"><RecalculateSeasonForm seasonId={season.id} standingCount={season._count.standings} /></div>}
+          </article>
+        ))}
+      </div>
     </section>
   );
 }
