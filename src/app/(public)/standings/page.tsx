@@ -23,7 +23,7 @@ export default async function StandingsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="bg-gray-950 text-gray-300">
                 <tr>
-                  {["Posición", "Nickname", "Parciales", "Exactos", "Exactos jornada", "Puntos", "Tendencia"].map(
+                  {["Posición", "Nickname", "Exactos", "Exactos Jx2", "Parciales", "Puntos", "Tendencia"].map(
                     (label) => (
                       <th key={label} className="px-4 py-3">
                         {label}
@@ -37,9 +37,9 @@ export default async function StandingsPage() {
                   <tr key={standing.nickname} className={`border-t border-gray-800 ${standing.position <= 3 ? "bg-gray-800/40" : ""}`}>
                     <td className={`px-4 py-3 font-bold ${standing.position === 1 ? "text-yellow-300" : standing.position === 2 ? "text-gray-300" : standing.position === 3 ? "text-orange-300" : ""}`}>{standing.position}</td>
                     <td className="px-4 py-3">{standing.nickname}</td>
-                    <td className="px-4 py-3">{standing.partialCount}</td>
                     <td className="px-4 py-3">{standing.exactCount}</td>
                     <td className="px-4 py-3 text-cyan-300">{standing.doubleExactCount}</td>
+                    <td className="px-4 py-3">{standing.partialCount}</td>
                     <td className="px-4 py-3">{standing.totalPoints}</td>
                     <td className="px-4 py-3">
                       {trendLabel(
@@ -71,7 +71,7 @@ export default async function StandingsPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm">
-                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos de jornada ·{" "}
+                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos Jx2 ·{" "}
                   {standing.partialCount} parciales
                 </p>
               </article>
