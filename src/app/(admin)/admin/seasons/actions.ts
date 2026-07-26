@@ -79,6 +79,42 @@ export async function seasonAction(f: FormData) {
     });
     if (!updated.count) throw new Error("La temporada no está activa o ya fue cerrada.");
   }
+  else if (action === "reactivate") {
+    const seasonId = String(f.get("seasonId"));
+    const activeSeason = await prisma.season.findFirst({
+      where: { status: "ACTIVE", archivedAt: null },
+      select: { id: true },
+    });
+    if (activeSeason) throw new Error("Cierra la temporada activa antes de reactivar otra.");
+    const updated = await prisma.season.updateMany({
+      where: { id: seasonId, status: "CLOSED", archivedAt: null },
+      data: { status: "ACTIVE", closedAt: null },
+    });
+    if (!updated.count) throw new Error("Solo se pueden reactivar temporadas cerradas.");
+    await ensureActorParticipation(seasonId, a, now);
+    await prisma.auditLog.create({
+      data: {
+        actorUserId: a.id,
+        actorRole: a.role,
+        action: "SEASON_ACTIVATED",
+        entityType: "SEASON",
+        entityId: seasonId,
+        beforeJson: { status: "CLOSED" },
+        afterJson: { status: "ACTIVE", reactivated: true },
+      },
+    });
+  }
+  else if (action === "delete") {
+    const seasonId = String(f.get("seasonId"));
+    const season = await prisma.season.findFirst({
+      where: { id: seasonId, status: "DRAFT", archivedAt: null },
+      select: { _count: { select: { rounds: true, matches: true, participants: true, standings: true } } },
+    });
+    if (!season) throw new Error("Solo se pueden eliminar borradores.");
+    if (season._count.rounds || season._count.matches || season._count.participants || season._count.standings)
+      throw new Error("No se puede eliminar un borrador con datos. Archívalo para conservar el historial.");
+    await prisma.season.delete({ where: { id: seasonId } });
+  }
   else if (action === "archive") {
     const updated = await prisma.season.updateMany({
       where: {
