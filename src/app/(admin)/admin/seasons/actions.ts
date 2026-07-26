@@ -48,10 +48,24 @@ export async function seasonAction(f: FormData) {
       }),
       now,
     );
-  else if (action === "activate")
+  else if (action === "activate") {
     await new ActivateSeason(new PrismaSeasonActivationRepository()).execute(
       a,
       String(f.get("seasonId")),
+      now,
+    );
+    await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
+      a,
+      String(f.get("seasonId")),
+      a.id,
+      now,
+    );
+  }
+  else if (action === "join")
+    await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
+      a,
+      String(f.get("seasonId")),
+      a.id,
       now,
     );
   else if (action === "close") {
