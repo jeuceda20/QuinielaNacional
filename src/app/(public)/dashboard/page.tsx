@@ -45,6 +45,16 @@ export default async function DashboardPage() {
   ]);
   const next = pending[0];
   const nickname = user?.nickname ?? "participante";
+  const closesIn = next
+    ? Math.max(0, Math.ceil((next.predictionClosesAt.getTime() - now.getTime()) / 60000))
+    : null;
+  const closeCountdown = closesIn === null
+    ? null
+    : closesIn >= 1440
+      ? `${Math.floor(closesIn / 1440)} día(s) y ${Math.ceil((closesIn % 1440) / 60)} h`
+      : closesIn >= 60
+        ? `${Math.floor(closesIn / 60)} h y ${closesIn % 60} min`
+        : `${closesIn} min`;
 
   return (
     <section className="w-full space-y-6">
@@ -76,7 +86,7 @@ export default async function DashboardPage() {
         <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
           <strong>Próximo partido</strong>
           <p className="mt-1 truncate text-lg font-semibold">{next ? `${next.homeTeam.name} vs ${next.awayTeam.name}` : "Sin partidos próximos"}</p>
-          <p className="mt-1 text-sm text-gray-400">{next ? next.predictionClosesAt.toLocaleString("es-HN") : "Revisa las jornadas"}</p>
+            <p className="mt-1 text-sm text-gray-400">{next ? `Cierra en ${closeCountdown} · ${next.predictionClosesAt.toLocaleString("es-HN")}` : "Revisa las jornadas"}</p>
         </article>
         <article className="rounded-2xl border border-cyan-400/30 bg-gray-900 p-5 shadow-xl">
           <strong>Pendientes</strong>
@@ -103,7 +113,7 @@ export default async function DashboardPage() {
         <aside className="space-y-5">
           <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
             <h2 className="font-semibold">Próximo cierre</h2>
-            {next ? <p className="mt-2 text-sm text-gray-300">{next.homeTeam.name} vs {next.awayTeam.name} · {next.predictionClosesAt.toLocaleString("es-HN")}{next.isDoublePoints ? " · Partido doble" : ""}</p> : <p className="mt-2 text-sm text-gray-400">No tienes pronósticos pendientes.</p>}
+            {next ? <p className="mt-2 text-sm text-gray-300">{next.homeTeam.name} vs {next.awayTeam.name} · Cierra en {closeCountdown} · {next.predictionClosesAt.toLocaleString("es-HN")}{next.isDoublePoints ? " · Partido doble" : ""}</p> : <p className="mt-2 text-sm text-gray-400">No tienes pronósticos pendientes.</p>}
           </article>
           <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
             <h2 className="font-semibold">Reglas rápidas</h2>

@@ -21,6 +21,11 @@ export default async function MatchesPage() {
         homeTeam: { select: { name: true } },
         awayTeam: { select: { name: true } },
         _count: { select: { predictions: true } },
+        predictions: {
+          where: { deletedAt: null },
+          select: { homeGoals: true, awayGoals: true, user: { select: { nickname: true } } },
+          orderBy: { submittedAt: "asc" },
+        },
       },
     }),
     prisma.team.findMany({
@@ -29,6 +34,7 @@ export default async function MatchesPage() {
     }),
     prisma.round.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" } }),
   ]);
+  const now = new Date();
   return (
     <section className="w-full space-y-6">
       <div>
@@ -111,7 +117,16 @@ export default async function MatchesPage() {
                 <td className="px-3 py-3">{m.isDoublePoints ? "Sí" : "No"}</td>
                 <td className="px-3 py-3">{m._count.predictions}</td>
                 <td className="px-3 py-3">
-                  {m.status === "FINISHED_PENDING" ? <ProcessResultForm matchId={m.id} /> : "—"}
+                  {m.status === "FINISHED_PENDING" ? (
+                    <ProcessResultForm matchId={m.id} />
+                  ) : ["SCHEDULED", "RESCHEDULED", "CLOSED", "SUSPENDED", "RESUMED"].includes(m.status) ? (
+                    <form action={matchAction}>
+                      <input type="hidden" name="matchId" value={m.id} />
+                      <button name="action" value="finish" className="rounded bg-yellow-400 px-2 py-1 text-xs font-semibold text-gray-950">
+                        Registrar resultado
+                      </button>
+                    </form>
+                  ) : "—"}
                 </td>
                 <td className="px-3 py-3">
                   <details>
@@ -119,6 +134,18 @@ export default async function MatchesPage() {
                     <p>ID: {m.id}</p>
                     <p>Estado deportivo: {m.status}</p>
                     <p>No hay resultado oficial en esta pantalla.</p>
+                    {m.predictionClosesAt <= now ? (
+                      <div className="mt-3 rounded border border-gray-800 bg-gray-950 p-2 text-sm">
+                        <p className="font-semibold text-cyan-200">Pronósticos recibidos ({m.predictions.length})</p>
+                        {m.predictions.length ? (
+                          <ul className="mt-1 space-y-1 text-gray-300">
+                            {m.predictions.map((prediction) => (
+                              <li key={prediction.user.nickname}>{prediction.user.nickname}: {prediction.homeGoals} - {prediction.awayGoals}</li>
+                            ))}
+                          </ul>
+                        ) : <p className="mt-1 text-gray-400">No se registraron pronósticos.</p>}
+                      </div>
+                    ) : <p className="mt-3 text-gray-400">Los pronósticos se mostrarán al cerrar el plazo.</p>}
                     <form action={matchAction} className="mt-2 grid gap-1">
                       <input type="hidden" name="matchId" value={m.id} />
                       <input name="reason" placeholder="Motivo" className="rounded border border-gray-800 p-1" />

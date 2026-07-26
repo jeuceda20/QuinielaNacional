@@ -20,6 +20,8 @@ import { PrismaMatchCancellationRepository } from "@/modules/matches/infrastruct
 import { PrismaMatchCreationRepository } from "@/modules/matches/infrastructure/prisma-match-creation-repository";
 import { PrismaMatchRescheduleRepository } from "@/modules/matches/infrastructure/prisma-match-reschedule-repository";
 import { PrismaMatchSuspensionRepository } from "@/modules/matches/infrastructure/prisma-match-suspension-repository";
+
+import { prisma } from "@/lib/prisma";
 async function actor() {
   const t = (await cookies()).get("session")?.value,
     s = t ? await new SessionService(new PrismaSessionRepository()).validate(t, new Date()) : null;
@@ -69,5 +71,16 @@ export async function matchAction(f: FormData) {
       cancelMatchSchema.parse({ matchId: id, reason: f.get("reason") }),
       now,
     );
+  else if (action === "finish") {
+    const updated = await prisma.match.updateMany({
+      where: {
+        id,
+        archivedAt: null,
+        status: { in: ["SCHEDULED", "RESCHEDULED", "CLOSED", "SUSPENDED", "RESUMED"] },
+      },
+      data: { status: "FINISHED_PENDING" },
+    });
+    if (!updated.count) throw new Error("El partido no puede recibir resultado en su estado actual.");
+  }
   revalidatePath("/admin/matches");
 }
