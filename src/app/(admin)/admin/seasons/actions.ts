@@ -32,6 +32,20 @@ async function actor() {
     throw new Error("No autorizado.");
   return s.user;
 }
+
+async function ensureActorParticipation(seasonId: string, user: Awaited<ReturnType<typeof actor>>, now: Date) {
+  const existing = await prisma.seasonParticipant.findUnique({
+    where: { seasonId_userId: { seasonId, userId: user.id } },
+    select: { id: true },
+  });
+  if (existing) return;
+  await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
+    user,
+    seasonId,
+    user.id,
+    now,
+  );
+}
 export async function seasonAction(f: FormData) {
   const a = await actor(),
     now = new Date(),
@@ -54,20 +68,10 @@ export async function seasonAction(f: FormData) {
       String(f.get("seasonId")),
       now,
     );
-    await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
-      a,
-      String(f.get("seasonId")),
-      a.id,
-      now,
-    );
+    await ensureActorParticipation(String(f.get("seasonId")), a, now);
   }
   else if (action === "join")
-    await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
-      a,
-      String(f.get("seasonId")),
-      a.id,
-      now,
-    );
+    await ensureActorParticipation(String(f.get("seasonId")), a, now);
   else if (action === "close") {
     const updated = await prisma.season.updateMany({
       where: { id: String(f.get("seasonId")), status: "ACTIVE", archivedAt: null },
