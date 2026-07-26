@@ -1,12 +1,20 @@
 import { PrismaTeamRepository } from "@/modules/sports/infrastructure/prisma-sports-repositories";
+import { redirect } from "next/navigation";
 
 import { initialSetupAction } from "./actions";
+
+import { prisma } from "@/lib/prisma";
 
 export default async function SetupPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  const existingSuperAdmin = await prisma.user.findFirst({
+    where: { role: "SUPER_ADMIN", deletedAt: null },
+    select: { id: true },
+  });
+  if (existingSuperAdmin) redirect("/login");
   const teams = await new PrismaTeamRepository().listActive();
   const { error } = await searchParams;
   return (
