@@ -2,16 +2,7 @@
 
 import { passwordResetSchema } from "@/modules/auth/application/password-recovery";
 import { createPasswordRecoveryService } from "@/modules/auth/infrastructure/create-auth-services";
-
-export type ResetPasswordActionState = Readonly<{
-  success: boolean;
-  message: string;
-  fieldErrors?: Record<string, string[]>;
-}>;
-export const initialResetPasswordActionState: ResetPasswordActionState = {
-  success: false,
-  message: "",
-};
+import type { ResetPasswordActionState } from "@/modules/auth/ui/action-states";
 
 export async function resetPasswordAction(
   _: ResetPasswordActionState,

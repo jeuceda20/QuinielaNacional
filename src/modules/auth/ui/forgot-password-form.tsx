@@ -4,10 +4,8 @@ import { useActionState } from "react";
 
 import Link from "next/link";
 
-import {
-  forgotPasswordAction,
-  initialForgotPasswordActionState,
-} from "@/app/(public)/forgot-password/actions";
+import { forgotPasswordAction } from "@/app/(public)/forgot-password/actions";
+import { initialForgotPasswordActionState } from "./action-states";
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(

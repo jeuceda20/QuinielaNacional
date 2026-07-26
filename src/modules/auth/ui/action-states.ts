@@ -12,3 +12,22 @@ export type LoginActionState = Readonly<{
 }>;
 
 export const initialLoginActionState: LoginActionState = { status: "IDLE", message: "" };
+
+export type ForgotPasswordActionState = Readonly<{
+  success: boolean;
+  message: string;
+  emailError?: string;
+}>;
+export const initialForgotPasswordActionState: ForgotPasswordActionState = {
+  success: false,
+  message: "",
+};
+export type ResetPasswordActionState = Readonly<{
+  success: boolean;
+  message: string;
+  fieldErrors?: Record<string, string[]>;
+}>;
+export const initialResetPasswordActionState: ResetPasswordActionState = {
+  success: false,
+  message: "",
+};

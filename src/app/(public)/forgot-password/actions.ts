@@ -3,17 +3,9 @@
 import { z } from "zod";
 
 import { createPasswordRecoveryService } from "@/modules/auth/infrastructure/create-auth-services";
+import type { ForgotPasswordActionState } from "@/modules/auth/ui/action-states";
 
 const emailSchema = z.string().trim().email("Ingresa un correo electrÃ³nico vÃ¡lido.");
-export type ForgotPasswordActionState = Readonly<{
-  success: boolean;
-  message: string;
-  emailError?: string;
-}>;
-export const initialForgotPasswordActionState: ForgotPasswordActionState = {
-  success: false,
-  message: "",
-};
 
 export async function forgotPasswordAction(
   _: ForgotPasswordActionState,

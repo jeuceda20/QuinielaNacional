@@ -4,10 +4,8 @@ import { useActionState } from "react";
 
 import Link from "next/link";
 
-import {
-  initialResetPasswordActionState,
-  resetPasswordAction,
-} from "@/app/(public)/reset-password/actions";
+import { resetPasswordAction } from "@/app/(public)/reset-password/actions";
+import { initialResetPasswordActionState } from "./action-states";
 
 export function ResetPasswordForm({ token }: Readonly<{ token: string }>) {
   const [state, action, pending] = useActionState(
