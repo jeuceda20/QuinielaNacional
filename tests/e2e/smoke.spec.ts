@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+const responsiveViewports = [320, 375, 390, 768, 1366, 1920];
+
+test("keeps public navigation within each required viewport", async ({ page }) => {
+  for (const width of responsiveViewports) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto("/login");
+    expect(await page.locator("body").evaluate((body) => body.scrollWidth <= body.clientWidth)).toBe(true);
+  }
+});
+
 test("renders the public authentication entry points", async ({ page }) => {
   await page.goto("/login");
 
