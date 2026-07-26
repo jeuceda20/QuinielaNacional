@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import argon2 from "argon2";
 import { config } from "dotenv";
 
 config({ path: ".env.pilot.local", quiet: true });
@@ -11,6 +12,12 @@ const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: data
 try {
   const teams = await prisma.team.findMany({ where: { deletedAt: null }, orderBy: { displayOrder: "asc" } });
   if (teams.length < 10) throw new Error("Pilot requires ten seeded teams.");
+  const adminPasswordHash = await argon2.hash("PilotoSeguro2026!", { type: argon2.argon2id });
+  await prisma.user.upsert({
+    where: { emailNormalized: "admin-piloto@example.invalid" },
+    update: { role: "SUPER_ADMIN", status: "APPROVED", isTestUser: true, passwordHash: adminPasswordHash },
+    create: { firstName: "Admin", lastName: "Piloto", nickname: "admin-piloto", nicknameNormalized: "admin-piloto", email: "admin-piloto@example.invalid", emailNormalized: "admin-piloto@example.invalid", passwordHash: adminPasswordHash, role: "SUPER_ADMIN", status: "APPROVED", emailVerifiedAt: new Date(), approvedAt: new Date(), isTestUser: true, favoriteTeam: { connect: { id: teams[0]!.id } } },
+  });
   const season = await prisma.season.upsert({
     where: { slug: "piloto-2026" },
     update: { status: "DRAFT", archivedAt: null },
