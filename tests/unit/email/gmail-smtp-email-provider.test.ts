@@ -18,7 +18,7 @@ describe("GmailSmtpEmailProvider", () => {
     expect(transporter.sendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: "ana@example.com",
-        subject: "Confirma tu cuenta",
+        subject: "Confirma tu cuenta de Quiniela Nacional",
         text: expect.stringContaining("https://app.test/confirm"),
       }),
     );

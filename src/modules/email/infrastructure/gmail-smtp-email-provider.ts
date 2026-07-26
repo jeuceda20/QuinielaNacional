@@ -53,7 +53,9 @@ export class GmailSmtpEmailProvider implements EmailProvider {
         await this.transporter.sendMail({ from: this.from, to, subject, text, html });
         return;
       } catch {
-        // Retry once: short SMTP connection failures are common on free providers.
+        // Gmail can reject a just-opened SMTP connection transiently. Waiting before the
+        // second attempt makes this a new connection instead of repeating the same failure.
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 1_000));
       }
     }
     throw new EmailDeliveryError("TEMPORARY");
