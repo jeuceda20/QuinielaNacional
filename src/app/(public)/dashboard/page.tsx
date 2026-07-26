@@ -46,13 +46,13 @@ export default async function DashboardPage() {
   ]);
   const next = pending[0];
   return (
-    <section className="w-full space-y-5">
+    <section className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Hola, {user?.nickname ?? "participante"}</h1>
-        <p className="text-sm text-slate-600">Resumen de tu quiniela.</p>
+        <p className="text-sm text-gray-400">Centro de control de tu quiniela.</p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <article className="rounded bg-white p-4 shadow">
+        <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
           <strong>Posición</strong>
           <p className="text-2xl">{own?.position ?? "—"}</p>
           <p className="text-sm">
@@ -64,22 +64,22 @@ export default async function DashboardPage() {
               : "NEW"}
           </p>
         </article>
-        <article className="rounded bg-white p-4 shadow">
+        <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
           <strong>Puntos</strong>
           <p className="text-2xl">{own?.totalPoints ?? 0}</p>
           <p className="text-sm">
             {own?.exactCount ?? 0} exactos · {own?.partialCount ?? 0} parciales
           </p>
         </article>
-        <article className="rounded bg-white p-4 shadow">
+        <article className="rounded-2xl border border-cyan-400/30 bg-gray-900 p-5 shadow-xl">
           <strong>Pendientes</strong>
           <p className="text-2xl">{pending.length}</p>
-          <Link href="/predictions" className="text-sm text-blue-700">
+          <Link href="/predictions" className="text-sm text-cyan-300">
             Ir a pronosticar
           </Link>
         </article>
       </div>
-      <article className="rounded bg-white p-4 shadow">
+      <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
         <h2 className="font-semibold">Próximo cierre</h2>
         {next ? (
           <p className="mt-2">
@@ -91,7 +91,7 @@ export default async function DashboardPage() {
           <p className="mt-2">No tienes pronósticos pendientes.</p>
         )}
       </article>
-      <article className="rounded bg-white p-4 shadow">
+      <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
         <h2 className="font-semibold">Top 5</h2>
         <ol className="mt-2 space-y-1">
           {top.map((standing) => (
