@@ -12,17 +12,17 @@ export default async function MatchesPage() {
   const t = (await cookies()).get("session")?.value,
     s = t ? await new SessionService(new PrismaSessionRepository()).validate(t, new Date()) : null;
   if (!s || (s.user.role !== "ADMIN" && s.user.role !== "SUPER_ADMIN")) redirect("/login");
-  const matches = await prisma.match.findMany({
-    where: { archivedAt: null },
-    orderBy: { scheduledAt: "asc" },
-    include: {
-      round: { select: { name: true } },
-      homeTeam: { select: { name: true } },
-      awayTeam: { select: { name: true } },
-      _count: { select: { predictions: true } },
-    },
-  });
-  const [teams, rounds] = await Promise.all([
+  const [matches, teams, rounds] = await Promise.all([
+    prisma.match.findMany({
+      where: { archivedAt: null },
+      orderBy: { scheduledAt: "asc" },
+      include: {
+        round: { select: { name: true } },
+        homeTeam: { select: { name: true } },
+        awayTeam: { select: { name: true } },
+        _count: { select: { predictions: true } },
+      },
+    }),
     prisma.team.findMany({
       where: { isActive: true, deletedAt: null },
       orderBy: { displayOrder: "asc" },
@@ -55,7 +55,12 @@ export default async function MatchesPage() {
             </option>
           ))}
         </select>
-        <select name="awayTeamId" aria-label="Equipo visitante" required className="rounded border p-2">
+        <select
+          name="awayTeamId"
+          aria-label="Equipo visitante"
+          required
+          className="rounded border p-2"
+        >
           <option value="">Visitante</option>
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
@@ -63,7 +68,13 @@ export default async function MatchesPage() {
             </option>
           ))}
         </select>
-        <input name="scheduledAt" aria-label="Fecha y hora programada" type="datetime-local" required className="rounded border p-2" />
+        <input
+          name="scheduledAt"
+          aria-label="Fecha y hora programada"
+          type="datetime-local"
+          required
+          className="rounded border p-2"
+        />
         <button className="rounded bg-blue-700 p-2 font-semibold text-white">Crear partido</button>
       </form>
       <div className="overflow-x-auto rounded bg-white shadow">
