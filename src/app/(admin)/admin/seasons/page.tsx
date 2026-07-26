@@ -36,12 +36,13 @@ export default async function SeasonsPage() {
         <input type="hidden" name="action" value="create" />
         <input
           name="name"
+          aria-label="Nombre de temporada"
           placeholder="Nombre de temporada"
           required
           className="rounded border p-2"
         />
-        <input name="slug" placeholder="slug-temporada" required className="rounded border p-2" />
-        <input name="startsAt" type="date" required className="rounded border p-2" />
+        <input name="slug" aria-label="Slug de temporada" placeholder="slug-temporada" required className="rounded border p-2" />
+        <input name="startsAt" aria-label="Fecha de inicio" type="date" required className="rounded border p-2" />
         <button className="rounded bg-blue-700 p-2 font-semibold text-white">Crear borrador</button>
       </form>
       {seasons.map((x) => (
@@ -60,7 +61,7 @@ export default async function SeasonsPage() {
                 Activar temporada
               </button>
             )}
-            <input name="userId" placeholder="ID de usuario" className="rounded border p-2" />
+            <input name="userId" aria-label="ID de usuario" placeholder="ID de usuario" className="rounded border p-2" />
             <button name="action" value="participant" className="rounded border px-3">
               Incorporar participante
             </button>

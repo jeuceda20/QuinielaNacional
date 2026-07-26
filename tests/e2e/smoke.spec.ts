@@ -17,6 +17,14 @@ test("renders the public authentication entry points", async ({ page }) => {
   await expect(page.getByLabel("Equipo favorito")).toBeVisible();
 });
 
+test("supports keyboard navigation with a visible focus indicator", async ({ page }) => {
+  await page.goto("/login");
+  await page.keyboard.press("Tab");
+
+  await expect(page.locator(":focus")).toBeVisible();
+  await expect(page.locator(":focus")).toHaveCSS("outline-style", "solid");
+});
+
 test("shows server-side validation feedback for invalid authentication input", async ({ page }) => {
   await page.goto("/login");
 

@@ -20,7 +20,10 @@ export default async function SqlConsolePage() {
       </p>
       {env.ENABLE_SQL_CONSOLE && (
         <form action={executeSqlAction} className="grid gap-2">
-          <textarea name="sql" required placeholder="SELECT ..." className="rounded border p-2" />
+          <label className="grid gap-1">
+            Consulta SQL
+            <textarea name="sql" required placeholder="SELECT ..." className="rounded border p-2" />
+          </label>
           <button className="rounded bg-blue-700 p-2 text-white">Ejecutar</button>
         </form>
       )}

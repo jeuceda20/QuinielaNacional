@@ -39,7 +39,7 @@ export default async function MatchesPage() {
       </div>
       <form action={matchAction} className="grid gap-2 rounded bg-white p-4 shadow sm:grid-cols-5">
         <input type="hidden" name="action" value="create" />
-        <select name="roundId" required className="rounded border p-2">
+        <select name="roundId" aria-label="Jornada" required className="rounded border p-2">
           <option value="">Jornada</option>
           {rounds.map((round) => (
             <option key={round.id} value={round.id}>
@@ -47,7 +47,7 @@ export default async function MatchesPage() {
             </option>
           ))}
         </select>
-        <select name="homeTeamId" required className="rounded border p-2">
+        <select name="homeTeamId" aria-label="Equipo local" required className="rounded border p-2">
           <option value="">Local</option>
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
@@ -55,7 +55,7 @@ export default async function MatchesPage() {
             </option>
           ))}
         </select>
-        <select name="awayTeamId" required className="rounded border p-2">
+        <select name="awayTeamId" aria-label="Equipo visitante" required className="rounded border p-2">
           <option value="">Visitante</option>
           {teams.map((team) => (
             <option key={team.id} value={team.id}>
@@ -63,7 +63,7 @@ export default async function MatchesPage() {
             </option>
           ))}
         </select>
-        <input name="scheduledAt" type="datetime-local" required className="rounded border p-2" />
+        <input name="scheduledAt" aria-label="Fecha y hora programada" type="datetime-local" required className="rounded border p-2" />
         <button className="rounded bg-blue-700 p-2 font-semibold text-white">Crear partido</button>
       </form>
       <div className="overflow-x-auto rounded bg-white shadow">
