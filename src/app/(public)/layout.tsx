@@ -1,6 +1,14 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function PublicLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+import { SessionService } from "@/modules/auth/application/session-service";
+import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
+
+export default async function PublicLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const token = (await cookies()).get("session")?.value;
+  const session = token
+    ? await new SessionService(new PrismaSessionRepository()).validate(token, new Date())
+    : null;
   return (
     <div className="flex min-h-full flex-1 flex-col bg-slate-50 text-slate-950">
       <header className="border-b border-slate-200 bg-white">
@@ -21,15 +29,23 @@ export default function PublicLayout({ children }: Readonly<{ children: React.Re
             <Link href="/results" className="rounded-md px-3 py-2 hover:bg-slate-100">
               Resultados
             </Link>
-            <Link href="/login" className="rounded-md px-3 py-2 hover:bg-slate-100">
-              Iniciar sesión
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-800"
-            >
-              Registrarse
-            </Link>
+            {session ? (
+              <form action="/api/v1/auth/logout" method="post">
+                <button className="rounded-md px-3 py-2 hover:bg-slate-100">Cerrar sesión</button>
+              </form>
+            ) : (
+              <>
+                <Link href="/login" className="rounded-md px-3 py-2 hover:bg-slate-100">
+                  Iniciar sesión
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-md bg-blue-700 px-3 py-2 text-white hover:bg-blue-800"
+                >
+                  Registrarse
+                </Link>
+              </>
+            )}
           </div>
         </nav>
       </header>
