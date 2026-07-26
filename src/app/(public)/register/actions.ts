@@ -45,6 +45,7 @@ export async function registerAction(
     await createRegistrationService().execute(parsed.data, now);
     redirect("/login?registered=1");
   } catch (error) {
+    if (error && typeof error === "object" && "digest" in error) throw error;
     if (error instanceof RegistrationError)
       return {
         success: false,
