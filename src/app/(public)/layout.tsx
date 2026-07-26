@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";

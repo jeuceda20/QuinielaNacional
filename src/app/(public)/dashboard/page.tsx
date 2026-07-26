@@ -18,21 +18,13 @@ export default async function DashboardPage() {
     ? await new SessionService(new PrismaSessionRepository()).validate(token, new Date())
     : null;
   if (!session) redirect("/login");
+
   const now = new Date();
   const [pending, own, top, user] = await Promise.all([
-    new GetPendingPredictions(new PrismaPendingPredictionRepository()).execute(
-      session.user.id,
-      now,
-    ),
+    new GetPendingPredictions(new PrismaPendingPredictionRepository()).execute(session.user.id, now),
     prisma.standing.findFirst({
       where: { userId: session.user.id },
-      select: {
-        position: true,
-        previousPosition: true,
-        totalPoints: true,
-        exactCount: true,
-        partialCount: true,
-      },
+      select: { position: true, previousPosition: true, totalPoints: true, exactCount: true, partialCount: true },
     }),
     prisma.standing.findMany({
       take: 5,
@@ -45,62 +37,76 @@ export default async function DashboardPage() {
     }),
   ]);
   const next = pending[0];
+  const nickname = user?.nickname ?? "participante";
+
   return (
     <section className="w-full space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Hola, {user?.nickname ?? "participante"}</h1>
-        <p className="text-sm text-gray-400">Centro de control de tu quiniela.</p>
+      <div className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl sm:flex sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex size-14 items-center justify-center rounded-full bg-blue-600 text-xl font-bold">
+            {nickname.slice(0, 1).toUpperCase()}
+          </div>
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">Quiniela Nacional</p>
+            <h1 className="text-2xl font-bold">Hola, {nickname}</h1>
+            <p className="text-sm text-gray-400">Centro de control de tu quiniela.</p>
+          </div>
+        </div>
+        <p className="mt-4 text-sm text-gray-400 sm:mt-0">{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos</p>
       </div>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
-          <strong>Posición</strong>
+          <strong>Posición actual</strong>
           <p className="text-2xl">{own?.position ?? "—"}</p>
-          <p className="text-sm">
-            {own
-              ? getStandingTrend({
-                  currentPosition: own.position,
-                  previousPosition: own.previousPosition,
-                })
-              : "NEW"}
+          <p className="text-sm text-gray-400">
+            {own ? getStandingTrend({ currentPosition: own.position, previousPosition: own.previousPosition }) : "NEW"}
           </p>
         </article>
         <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
-          <strong>Puntos</strong>
-          <p className="text-2xl">{own?.totalPoints ?? 0}</p>
-          <p className="text-sm">
-            {own?.exactCount ?? 0} exactos · {own?.partialCount ?? 0} parciales
-          </p>
+          <strong>Próximo partido</strong>
+          <p className="mt-1 truncate text-lg font-semibold">{next ? `${next.homeTeam.name} vs ${next.awayTeam.name}` : "Sin partidos próximos"}</p>
+          <p className="mt-1 text-sm text-gray-400">{next ? next.predictionClosesAt.toLocaleString("es-HN") : "Revisa las jornadas"}</p>
         </article>
         <article className="rounded-2xl border border-cyan-400/30 bg-gray-900 p-5 shadow-xl">
           <strong>Pendientes</strong>
           <p className="text-2xl">{pending.length}</p>
-          <Link href="/predictions" className="text-sm text-cyan-300">
-            Ir a pronosticar
-          </Link>
+          <Link href="/predictions" className="text-sm text-cyan-300 hover:text-cyan-200">Ir a pronosticar</Link>
         </article>
       </div>
-      <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
-        <h2 className="font-semibold">Próximo cierre</h2>
-        {next ? (
-          <p className="mt-2">
-            {next.homeTeam.name} vs {next.awayTeam.name} ·{" "}
-            {next.predictionClosesAt.toLocaleString("es-HN")}
-            {next.isDoublePoints ? " · Partido doble" : ""}
-          </p>
-        ) : (
-          <p className="mt-2">No tienes pronósticos pendientes.</p>
-        )}
-      </article>
-      <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
-        <h2 className="font-semibold">Top 5</h2>
-        <ol className="mt-2 space-y-1">
-          {top.map((standing) => (
-            <li key={standing.user.nickname}>
-              {standing.position}. {standing.user.nickname} — {standing.totalPoints} puntos
-            </li>
-          ))}
-        </ol>
-      </article>
+
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(18rem,1fr)]">
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Link href="/predictions" className="rounded-3xl border border-cyan-400/35 bg-cyan-400/10 p-6 shadow-xl transition hover:bg-cyan-400/15">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">Juega ahora</p>
+            <h2 className="mt-3 text-xl font-bold">Pronósticos</h2>
+            <p className="mt-2 text-sm text-gray-300">Registra y actualiza tus marcadores antes del cierre.</p>
+            <span className="mt-6 inline-block font-semibold text-cyan-200">Ver partidos →</span>
+          </Link>
+          <Link href="/standings" className="rounded-3xl border border-blue-500/35 bg-blue-600/10 p-6 shadow-xl transition hover:bg-blue-600/15">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-300">Competencia</p>
+            <h2 className="mt-3 text-xl font-bold">Tabla de posiciones</h2>
+            <p className="mt-2 text-sm text-gray-300">Sigue tu puesto y el rendimiento de todos los participantes.</p>
+            <span className="mt-6 inline-block font-semibold text-blue-200">Ver tabla →</span>
+          </Link>
+        </div>
+        <aside className="space-y-5">
+          <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
+            <h2 className="font-semibold">Próximo cierre</h2>
+            {next ? <p className="mt-2 text-sm text-gray-300">{next.homeTeam.name} vs {next.awayTeam.name} · {next.predictionClosesAt.toLocaleString("es-HN")}{next.isDoublePoints ? " · Partido doble" : ""}</p> : <p className="mt-2 text-sm text-gray-400">No tienes pronósticos pendientes.</p>}
+          </article>
+          <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
+            <h2 className="font-semibold">Reglas rápidas</h2>
+            <p className="mt-2 text-sm text-gray-400">Parcial: 1 punto. Exacto: 3 puntos. Los partidos dobles valen el doble.</p>
+          </article>
+          <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
+            <h2 className="font-semibold">Top 5</h2>
+            <ol className="mt-2 space-y-1 text-sm text-gray-300">
+              {top.map((standing) => <li key={standing.user.nickname}>{standing.position}. {standing.user.nickname} — {standing.totalPoints} puntos</li>)}
+            </ol>
+          </article>
+        </aside>
+      </div>
     </section>
   );
 }

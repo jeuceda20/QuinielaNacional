@@ -15,13 +15,13 @@ export default async function StandingsPage() {
     <section className="w-full space-y-5">
       <div>
         <h1 className="text-2xl font-bold">Clasificación</h1>
-        <p className="text-sm text-slate-600">Resultados oficiales procesados.</p>
+        <p className="text-sm text-gray-400">Resultados oficiales procesados.</p>
       </div>
       {standings.length ? (
         <>
-          <div className="hidden overflow-x-auto rounded bg-white shadow md:block">
+          <div className="hidden overflow-x-auto rounded-2xl border border-gray-800 bg-gray-900 shadow-xl md:block">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-100">
+              <thead className="bg-gray-950 text-gray-300">
                 <tr>
                   {["Posición", "Nickname", "Parciales", "Exactos", "Puntos", "Tendencia"].map(
                     (label) => (
@@ -34,8 +34,8 @@ export default async function StandingsPage() {
               </thead>
               <tbody>
                 {standings.map((standing) => (
-                  <tr key={standing.nickname} className="border-t">
-                    <td className="px-4 py-3">{standing.position}</td>
+                  <tr key={standing.nickname} className={`border-t border-gray-800 ${standing.position <= 3 ? "bg-gray-800/40" : ""}`}>
+                    <td className={`px-4 py-3 font-bold ${standing.position === 1 ? "text-yellow-300" : standing.position === 2 ? "text-gray-300" : standing.position === 3 ? "text-orange-300" : ""}`}>{standing.position}</td>
                     <td className="px-4 py-3">{standing.nickname}</td>
                     <td className="px-4 py-3">{standing.partialCount}</td>
                     <td className="px-4 py-3">{standing.exactCount}</td>
@@ -55,7 +55,7 @@ export default async function StandingsPage() {
           </div>
           <div className="grid gap-3 md:hidden">
             {standings.map((standing) => (
-              <article key={standing.nickname} className="rounded bg-white p-4 shadow">
+              <article key={standing.nickname} className="rounded-2xl border border-gray-800 bg-gray-900 p-4 shadow-xl">
                 <div className="flex justify-between">
                   <strong>
                     {standing.position}. {standing.nickname}
@@ -78,7 +78,7 @@ export default async function StandingsPage() {
           </div>
         </>
       ) : (
-        <p role="status" className="rounded bg-white p-6">
+        <p role="status" className="rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-300 shadow-xl">
           Aún no hay clasificación publicada.
         </p>
       )}

@@ -31,7 +31,7 @@ export default async function SeasonsPage() {
       <h1 className="text-2xl font-bold">Temporadas y jornadas</h1>
       <form
         action={seasonAction}
-        className="grid gap-2 rounded bg-white p-4 shadow-sm sm:grid-cols-4"
+        className="grid gap-2 rounded-2xl border border-yellow-400/25 bg-gray-900 p-4 shadow-xl sm:grid-cols-4"
       >
         <input type="hidden" name="action" value="create" />
         <input
@@ -39,26 +39,26 @@ export default async function SeasonsPage() {
           aria-label="Nombre de temporada"
           placeholder="Nombre de temporada"
           required
-          className="rounded border p-2"
+          className="rounded-xl border border-gray-800 p-2"
         />
         <input
           name="slug"
           aria-label="Slug de temporada"
           placeholder="slug-temporada"
           required
-          className="rounded border p-2"
+          className="rounded-xl border border-gray-800 p-2"
         />
         <input
           name="startsAt"
           aria-label="Fecha de inicio"
           type="date"
           required
-          className="rounded border p-2"
+          className="rounded-xl border border-gray-800 p-2"
         />
-        <button className="rounded bg-blue-700 p-2 font-semibold text-white">Crear borrador</button>
+        <button className="rounded-xl bg-yellow-400 p-2 font-semibold text-gray-950 hover:bg-yellow-300">Crear borrador</button>
       </form>
       {seasons.map((x) => (
-        <article key={x.id} className="rounded bg-white p-4 shadow-sm">
+        <article key={x.id} className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl">
           <h2 className="font-bold">
             {x.name} <span className="text-sm font-normal">Estado: {x.status}</span>
           </h2>
@@ -68,7 +68,7 @@ export default async function SeasonsPage() {
               <button
                 name="action"
                 value="activate"
-                className="rounded bg-blue-700 px-3 py-2 text-white"
+                className="rounded-xl bg-yellow-400 px-3 py-2 font-semibold text-gray-950 hover:bg-yellow-300"
               >
                 Activar temporada
               </button>
@@ -77,9 +77,9 @@ export default async function SeasonsPage() {
               name="userId"
               aria-label="ID de usuario"
               placeholder="ID de usuario"
-              className="rounded border p-2"
+              className="rounded-xl border border-gray-800 p-2"
             />
-            <button name="action" value="participant" className="rounded border px-3">
+            <button name="action" value="participant" className="rounded-xl border border-gray-700 px-3 hover:border-yellow-300">
               Incorporar participante
             </button>
           </form>
@@ -90,21 +90,21 @@ export default async function SeasonsPage() {
               name="roundName"
               placeholder="Nombre de jornada"
               required
-              className="rounded border p-2"
+              className="rounded-xl border border-gray-800 p-2"
             />
             <input
               name="roundSlug"
               placeholder="slug-jornada"
               required
-              className="rounded border p-2"
+              className="rounded-xl border border-gray-800 p-2"
             />
             <input
               name="sequence"
               type="number"
               defaultValue="1"
-              className="w-20 rounded border p-2"
+              className="w-20 rounded-xl border border-gray-800 p-2"
             />
-            <button className="rounded border px-3">Crear jornada</button>
+            <button className="rounded-xl border border-gray-700 px-3 hover:border-yellow-300">Crear jornada</button>
           </form>
           <h3 className="mt-4 font-semibold">Jornadas</h3>
           <ul className="mt-2 space-y-2">

@@ -33,19 +33,19 @@ export function AdminUsersTable({
     <section className="w-full space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Usuarios</h1>
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-gray-400">
           Gestiona cuentas sin exponer credenciales ni sesiones.
         </p>
       </div>
-      <form className="grid gap-3 rounded-lg bg-white p-4 shadow-sm sm:grid-cols-4">
+      <form className="grid gap-3 rounded-2xl border border-yellow-400/25 bg-gray-900 p-4 shadow-xl sm:grid-cols-4">
         <input
           name="q"
           defaultValue={filters.query}
           placeholder="Buscar usuario"
-          className="rounded border p-2"
+          className="rounded-xl border border-gray-800 p-2"
           aria-label="Buscar usuario"
         />
-        <select name="status" defaultValue={filters.status} className="rounded border p-2">
+        <select name="status" defaultValue={filters.status} className="rounded-xl border border-gray-800 p-2">
           <option value="">Todos los estados</option>
           {Object.entries(labels).map(([value, label]) => (
             <option key={value} value={value}>
@@ -53,29 +53,29 @@ export function AdminUsersTable({
             </option>
           ))}
         </select>
-        <select name="role" defaultValue={filters.role} className="rounded border p-2">
+        <select name="role" defaultValue={filters.role} className="rounded-xl border border-gray-800 p-2">
           <option value="">Todos los roles</option>
           <option value="USER">Usuario</option>
           <option value="ADMIN">Administrador</option>
           <option value="SUPER_ADMIN">Superadministrador</option>
         </select>
-        <select name="verified" defaultValue={filters.verified} className="rounded border p-2">
+        <select name="verified" defaultValue={filters.verified} className="rounded-xl border border-gray-800 p-2">
           <option value="">Correo: todos</option>
           <option value="yes">Confirmado</option>
           <option value="no">Sin confirmar</option>
         </select>
-        <button className="rounded bg-blue-700 px-4 py-2 font-semibold text-white sm:col-span-4">
+        <button className="rounded-xl bg-yellow-400 px-4 py-2 font-semibold text-gray-950 hover:bg-yellow-300 sm:col-span-4">
           Aplicar filtros
         </button>
       </form>
       {users.length === 0 ? (
-        <p role="status" className="rounded bg-white p-6 text-slate-600 shadow-sm">
+        <p role="status" className="rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-300 shadow-xl">
           No se encontraron usuarios con esos filtros.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-2xl border border-gray-800 bg-gray-900 shadow-xl">
           <table className="min-w-full text-left text-sm">
-            <thead className="bg-slate-100">
+            <thead className="bg-gray-950 text-gray-300">
               <tr>
                 {[
                   "Nickname",
@@ -97,7 +97,7 @@ export function AdminUsersTable({
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className="border-t">
+                <tr key={u.id} className="border-t border-gray-800">
                   <td className="px-3 py-3">{u.nickname}</td>
                   <td className="px-3 py-3">{u.fullName}</td>
                   <td className="px-3 py-3">{u.email}</td>
@@ -111,7 +111,7 @@ export function AdminUsersTable({
                   <td className="px-3 py-3">{u.activeSeason ?? "—"}</td>
                   <td className="px-3 py-3">
                     <details>
-                      <summary className="cursor-pointer text-blue-700">Ver detalle</summary>
+                      <summary className="cursor-pointer text-yellow-300">Ver detalle</summary>
                       <p className="mt-2">ID: {u.id}</p>
                       <p>Acciones disponibles según su estado y tu rol.</p>
                       <form action={adminUserAction} className="mt-2 grid gap-2">
@@ -120,7 +120,7 @@ export function AdminUsersTable({
                           name="reason"
                           aria-label={`Motivo para ${u.nickname}`}
                           placeholder="Motivo"
-                          className="rounded border p-1"
+                          className="rounded border border-gray-800 p-1"
                         />
                         {u.status === "PENDING_APPROVAL" && (
                           <>
@@ -194,7 +194,7 @@ export function AdminUsersTable({
         <span>{total} usuarios</span>
         {page > 1 ? (
           <Link
-            className="text-blue-700"
+          className="text-yellow-300"
             href={`?${new URLSearchParams({
               ...Object.fromEntries(
                 Object.entries(filters)
@@ -210,7 +210,7 @@ export function AdminUsersTable({
           <span />
         )}
         {page < pages ? (
-          <Link className="text-blue-700" href={`?page=${page + 1}`}>
+          <Link className="text-yellow-300" href={`?page=${page + 1}`}>
             Siguiente
           </Link>
         ) : (

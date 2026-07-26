@@ -17,7 +17,7 @@ export default async function PredictionsPage() {
     new Date(),
   );
   return (
-    <section className="mx-auto w-full max-w-2xl space-y-5">
+    <section className="mx-auto w-full max-w-2xl space-y-6">
       <h1 className="text-2xl font-bold">Mis pronósticos pendientes</h1>
       {matches.length ? (
         matches.map((m) => (
@@ -33,7 +33,7 @@ export default async function PredictionsPage() {
           />
         ))
       ) : (
-        <p role="status" className="rounded bg-white p-6">
+        <p role="status" className="rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-300 shadow-xl">
           No tienes pronósticos pendientes.
         </p>
       )}
