@@ -12,13 +12,15 @@ export class PrismaInitialSetupRepository implements InitialSetupRepository {
         select: { id: true },
       });
       if (existing) return "ALREADY_COMPLETED" as const;
+      const { favoriteTeamId, now, ...user } = input;
       await database.user.create({
         data: {
-          ...input,
+          ...user,
+          favoriteTeam: { connect: { id: favoriteTeamId } },
           role: "SUPER_ADMIN",
           status: "APPROVED",
-          emailVerifiedAt: input.now,
-          approvedAt: input.now,
+          emailVerifiedAt: now,
+          approvedAt: now,
         },
       });
       return "CREATED" as const;
