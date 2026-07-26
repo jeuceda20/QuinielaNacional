@@ -49,6 +49,7 @@ export async function adminUserAction(formData: FormData) {
           port: env.SMTP_PORT,
           user: env.SMTP_USER,
           appPassword: env.SMTP_APP_PASSWORD,
+          appUrl: env.APP_URL,
         }),
         new RateLimiter(new PrismaRateLimitRepository()),
       ),
