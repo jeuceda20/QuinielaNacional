@@ -48,7 +48,14 @@ export class GmailSmtpEmailProvider implements EmailProvider {
     return `<main style="max-width:560px;margin:0 auto;padding:32px;background:#111827;color:#f9fafb;font-family:Arial,sans-serif;border-radius:16px"><p style="color:#22d3ee;font-weight:700;letter-spacing:.08em">QUINIELA NACIONAL</p><h1 style="font-size:24px">${escape(title)}</h1><p>${escape(greeting)}</p><p style="color:#d1d5db;line-height:1.6">${escape(message)}</p><p style="margin:28px 0"><a href="${escape(actionUrl)}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 18px;border-radius:10px;text-decoration:none;font-weight:700">${escape(actionLabel)}</a></p><p style="color:#9ca3af;font-size:13px">${escape(footer)}</p></main>`;
   }
   private async send(to: string, subject: string, text: string, html?: string) {
-    try { await this.transporter.sendMail({ from: this.from, to, subject, text, html }); }
-    catch { throw new EmailDeliveryError("TEMPORARY"); }
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await this.transporter.sendMail({ from: this.from, to, subject, text, html });
+        return;
+      } catch {
+        // Retry once: short SMTP connection failures are common on free providers.
+      }
+    }
+    throw new EmailDeliveryError("TEMPORARY");
   }
 }
