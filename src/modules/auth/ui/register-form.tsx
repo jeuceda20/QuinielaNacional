@@ -58,6 +58,9 @@ export function RegisterForm({ teams }: Readonly<{ teams: readonly Team[] }>) {
           error={error("passwordConfirmation")}
         />
       </div>
+      <p className="-mt-3 text-xs text-gray-400">
+        La contraseña debe tener entre 12 y 128 caracteres. Usa una frase larga que no reutilices en otros sitios.
+      </p>
       <label className="flex items-start gap-3 text-sm text-gray-300">
         <input name="acceptedRules" type="checkbox" required className="mt-1 size-4 accent-blue-600" />
         Acepto las reglas de la quiniela.

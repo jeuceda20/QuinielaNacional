@@ -35,7 +35,11 @@ export async function registerAction(
 
   const now = new Date();
   if (!(await consumeRegistrationRateLimit(await getRequestIpAddress(), now)))
-    return { success: false, message: "Demasiados intentos. Inténtalo nuevamente más tarde." };
+    return {
+      success: false,
+      message:
+        "Por seguridad se permiten hasta 5 registros desde la misma red por hora. Espera hasta una hora antes de intentarlo de nuevo.",
+    };
 
   try {
     await createRegistrationService().execute(parsed.data, now);
