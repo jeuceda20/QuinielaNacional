@@ -78,10 +78,21 @@ try {
     data: [...demoUsers, leader].map((user) => ({ seasonId: season.id, userId: user.id, isTestData: true })),
     skipDuplicates: true,
   });
+  await prisma.match.updateMany({
+    where: { seasonId: season.id, archivedAt: null },
+    data: { status: "PROCESSED" },
+  });
+  await prisma.predictionScore.deleteMany({ where: { seasonId: season.id } });
 
   const matches = await prisma.match.findMany({
-    where: { seasonId: season.id, status: "PROCESSED", archivedAt: null },
+    where: {
+      seasonId: season.id,
+      status: "PROCESSED",
+      archivedAt: null,
+      results: { some: { isCurrent: true } },
+    },
     orderBy: { scheduledAt: "asc" },
+    take: 50,
     select: {
       id: true,
       isDoublePoints: true,
@@ -94,8 +105,8 @@ try {
   });
   const normalMatches = scoredMatches.filter((match) => !match.isDoublePoints);
   const doubleMatches = scoredMatches.filter((match) => match.isDoublePoints);
-  if (normalMatches.length < 27 || doubleMatches.length < 5) {
-    throw new Error("El piloto necesita 27 partidos normales y 5 partidos de jornada procesados.");
+  if (normalMatches.length !== 40 || doubleMatches.length !== 10) {
+    throw new Error("El piloto debe tener 40 partidos normales y 10 partidos de jornada procesados.");
   }
 
   const [normalUser, jornadaUser] = demoUsers;
@@ -187,7 +198,7 @@ try {
     }
     await prisma.standing.upsert({
       where: { seasonId_userId: { seasonId: season.id, userId: standing.userId } },
-      update: { position: currentPosition, previousPosition: previous.find((item) => item.userId === standing.userId)?.previousPosition ?? null, ...totals.get(standing.userId)!, recalculatedAt: new Date() },
+      update: { position: currentPosition, previousPosition: standing.userId === leader.id ? null : previous.find((item) => item.userId === standing.userId)?.previousPosition ?? null, ...totals.get(standing.userId)!, recalculatedAt: new Date() },
       create: { seasonId: season.id, userId: standing.userId, position: currentPosition, ...totals.get(standing.userId)! },
     });
     last = standing;
