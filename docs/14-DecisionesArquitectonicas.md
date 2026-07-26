@@ -2142,6 +2142,39 @@ No deberán modificarse durante el desarrollo salvo una decisión arquitectónic
 
 ---
 
+# ADR-051
+
+## Supabase PostgreSQL para producción
+
+### Estado
+
+Aceptada.
+
+---
+
+### Contexto
+
+El proyecto es una comunidad futbolera sin ingresos y debe operar sin costo obligatorio. Se requiere una base PostgreSQL administrada para producción, compatible con Prisma y separada de preview, desarrollo y pruebas.
+
+---
+
+### Decisión
+
+La base de producción será un proyecto de Supabase PostgreSQL en el plan Free.
+
+- La aplicación serverless utilizará el Shared Pooler en modo transaction.
+- Las migraciones y exportaciones usarán la conexión directa, o el pooler en modo session cuando el ejecutor no disponga de IPv6.
+- Las credenciales se guardarán exclusivamente como secretos del hosting.
+- No se habilitarán complementos ni servicios que impliquen cobro.
+
+---
+
+### Consecuencias
+
+Se mantiene PostgreSQL estándar y Prisma como única vía normal de acceso, por lo que la portabilidad se conserva. El equipo deberá revisar los límites y políticas vigentes del plan Free, conservar respaldos verificables y migrar antes de aceptar costos si las condiciones cambian.
+
+---
+
 # Resumen de decisiones
 
 Las siguientes tecnologías quedan oficialmente adoptadas:
@@ -2152,7 +2185,7 @@ Las siguientes tecnologías quedan oficialmente adoptadas:
 | Framework | Next.js App Router |
 | UI | React + Tailwind |
 | Lenguaje | TypeScript estricto |
-| Base de datos | PostgreSQL |
+| Base de datos | PostgreSQL administrado en Supabase Free |
 | ORM | Prisma |
 | Validación | Zod |
 | Autenticación | Propia |

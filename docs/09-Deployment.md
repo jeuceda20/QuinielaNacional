@@ -125,11 +125,11 @@ Límites gratuitos suficientes.
 Ausencia de cobros inesperados.
 4.2 Base de datos
 
-Candidatos iniciales:
+Proveedor seleccionado:
 
-Supabase PostgreSQL.
-Neon PostgreSQL.
-Otro PostgreSQL con plan gratuito.
+Supabase PostgreSQL, plan Free.
+
+La aplicación utilizará el pooler compartido para el tráfico serverless y la conexión directa para migraciones, con TLS obligatorio. La configuración concreta está documentada en `docs/21-SUPABASE_PRODUCTION.md`.
 
 La aplicación no deberá depender de características propietarias innecesarias.
 
@@ -1241,7 +1241,6 @@ El costo obligatorio sea cero.
 Antes del despliegue real deberán confirmarse:
 
 Proveedor definitivo de hosting.
-Proveedor definitivo de PostgreSQL.
 Límites vigentes de los planes gratuitos.
 Versión de Node.js.
 Estrategia de pooling.
