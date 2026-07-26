@@ -55,8 +55,27 @@ try {
       }),
     ),
   );
+  const leader = await prisma.user.upsert({
+    where: { emailNormalized: "piloto-46@example.invalid" },
+    update: { status: "APPROVED", isTestUser: true, passwordHash },
+    create: {
+      firstName: "Piloto",
+      lastName: "46",
+      nickname: "piloto-46",
+      nicknameNormalized: "piloto-46",
+      email: "piloto-46@example.invalid",
+      emailNormalized: "piloto-46@example.invalid",
+      passwordHash,
+      role: "USER",
+      status: "APPROVED",
+      emailVerifiedAt: new Date(),
+      approvedAt: new Date(),
+      isTestUser: true,
+      favoriteTeamId: team.id,
+    },
+  });
   await prisma.seasonParticipant.createMany({
-    data: demoUsers.map((user) => ({ seasonId: season.id, userId: user.id, isTestData: true })),
+    data: [...demoUsers, leader].map((user) => ({ seasonId: season.id, userId: user.id, isTestData: true })),
     skipDuplicates: true,
   });
 
@@ -93,7 +112,7 @@ try {
       (!match.isDoublePoints && normalMatches.indexOf(match) < 7)
         ? exact
         : wrong(match.result);
-    const [normalSaved, jornadaSaved] = await Promise.all([
+    const [normalSaved, jornadaSaved, leaderSaved] = await Promise.all([
       prisma.prediction.upsert({
         where: { userId_matchId: { userId: normalUser!.id, matchId: match.id } },
         update: { ...normalPrediction, isTestData: true },
@@ -103,6 +122,11 @@ try {
         where: { userId_matchId: { userId: jornadaUser!.id, matchId: match.id } },
         update: { ...jornadaPrediction, isTestData: true },
         create: { userId: jornadaUser!.id, matchId: match.id, ...jornadaPrediction, isTestData: true },
+      }),
+      prisma.prediction.upsert({
+        where: { userId_matchId: { userId: leader.id, matchId: match.id } },
+        update: { ...exact, isTestData: true },
+        create: { userId: leader.id, matchId: match.id, ...exact, isTestData: true },
       }),
     ]);
     const score = (prediction: { homeGoals: number; awayGoals: number }) => {
@@ -121,6 +145,11 @@ try {
         where: { userId_matchId_resultVersion: { userId: jornadaUser!.id, matchId: match.id, resultVersion: match.result.version } },
         update: { predictionId: jornadaSaved.id, matchResultId: match.result.id, multiplier: match.isDoublePoints ? 2 : 1, ...score(jornadaSaved) },
         create: { seasonId: season.id, userId: jornadaUser!.id, matchId: match.id, predictionId: jornadaSaved.id, matchResultId: match.result.id, resultVersion: match.result.version, calculatedById: admin.id, multiplier: match.isDoublePoints ? 2 : 1, ...score(jornadaSaved) },
+      }),
+      prisma.predictionScore.upsert({
+        where: { userId_matchId_resultVersion: { userId: leader.id, matchId: match.id, resultVersion: match.result.version } },
+        update: { predictionId: leaderSaved.id, matchResultId: match.result.id, scoreType: "EXACT", basePoints: 3, multiplier: match.isDoublePoints ? 2 : 1, awardedPoints: match.isDoublePoints ? 6 : 3 },
+        create: { seasonId: season.id, userId: leader.id, matchId: match.id, predictionId: leaderSaved.id, matchResultId: match.result.id, resultVersion: match.result.version, calculatedById: admin.id, scoreType: "EXACT", basePoints: 3, multiplier: match.isDoublePoints ? 2 : 1, awardedPoints: match.isDoublePoints ? 6 : 3 },
       }),
     ]);
   }
@@ -164,7 +193,7 @@ try {
     last = standing;
   }
   const standings = await prisma.standing.findMany({
-    where: { seasonId: season.id, userId: { in: demoUsers.map((user) => user.id) } },
+    where: { seasonId: season.id, userId: { in: [...demoUsers, leader].map((user) => user.id) } },
     select: {
       position: true,
       totalPoints: true,
