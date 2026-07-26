@@ -37,6 +37,7 @@ export default async function SeasonsPage() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div><h2 className="font-bold">{season.name}</h2><p className="text-sm text-gray-400">{season._count.rounds} jornadas · {season._count.matches} partidos · Estado: {season.status}</p></div>
               {season.status === "DRAFT" && <form action={seasonAction}><input type="hidden" name="seasonId" value={season.id} /><button name="action" value="activate" className="rounded-xl bg-yellow-400 px-3 py-2 font-semibold text-gray-950">Activar temporada</button></form>}
+              {season.status === "ACTIVE" && <form action={seasonAction}><input type="hidden" name="seasonId" value={season.id} /><button name="action" value="close" className="rounded-xl border border-yellow-400/50 px-3 py-2 font-semibold text-yellow-200 hover:bg-yellow-400/10">Cerrar temporada</button></form>}
             </div>
             {session.user.role === "SUPER_ADMIN" && <div className="mt-4"><RecalculateSeasonForm seasonId={season.id} standingCount={season._count.standings} /></div>}
           </article>

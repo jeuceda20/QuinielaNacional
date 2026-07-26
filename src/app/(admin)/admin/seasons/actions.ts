@@ -54,6 +54,13 @@ export async function seasonAction(f: FormData) {
       String(f.get("seasonId")),
       now,
     );
+  else if (action === "close") {
+    const updated = await prisma.season.updateMany({
+      where: { id: String(f.get("seasonId")), status: "ACTIVE", archivedAt: null },
+      data: { status: "CLOSED", closedAt: now },
+    });
+    if (!updated.count) throw new Error("La temporada no está activa o ya fue cerrada.");
+  }
   else if (action === "participant")
     await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
       a,

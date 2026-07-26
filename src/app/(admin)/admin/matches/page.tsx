@@ -9,13 +9,27 @@ import { prisma } from "@/lib/prisma";
 
 import { seasonAction } from "../seasons/actions";
 import { matchAction } from "./actions";
-export default async function MatchesPage() {
+
+type Props = Readonly<{ searchParams: Promise<{ season?: string; round?: string }> }>;
+
+export default async function MatchesPage({ searchParams }: Props) {
+  const params = await searchParams;
   const t = (await cookies()).get("session")?.value,
     s = t ? await new SessionService(new PrismaSessionRepository()).validate(t, new Date()) : null;
   if (!s || (s.user.role !== "ADMIN" && s.user.role !== "SUPER_ADMIN")) redirect("/login");
-  const [matches, teams, rounds, seasons] = await Promise.all([
+  const seasons = await prisma.season.findMany({
+    where: { archivedAt: null },
+    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+    select: { id: true, name: true, status: true },
+  });
+  const selectedSeasonId = params.season ?? seasons.find((season) => season.status === "ACTIVE")?.id ?? seasons[0]?.id;
+  const rounds = selectedSeasonId
+    ? await prisma.round.findMany({ where: { seasonId: selectedSeasonId, archivedAt: null }, orderBy: [{ sequence: "asc" }, { createdAt: "asc" }] })
+    : [];
+  const selectedRoundId = params.round ?? "";
+  const [matches, teams] = await Promise.all([
     prisma.match.findMany({
-      where: { archivedAt: null },
+      where: { archivedAt: null, seasonId: selectedSeasonId, ...(selectedRoundId ? { roundId: selectedRoundId } : {}) },
       orderBy: { scheduledAt: "asc" },
       include: {
         round: { select: { name: true } },
@@ -33,8 +47,6 @@ export default async function MatchesPage() {
       where: { isActive: true, deletedAt: null },
       orderBy: { displayOrder: "asc" },
     }),
-    prisma.round.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" } }),
-    prisma.season.findMany({ where: { archivedAt: null }, orderBy: { createdAt: "desc" }, select: { id: true, name: true, status: true } }),
   ]);
   const now = new Date();
   return (
@@ -45,9 +57,20 @@ export default async function MatchesPage() {
           Orden cronológico por fecha oficial. Los resultados se gestionan en otra fase.
         </p>
       </div>
+      <form className="grid gap-2 rounded-2xl border border-gray-800 bg-gray-900 p-4 sm:grid-cols-3">
+        <select name="season" defaultValue={selectedSeasonId} aria-label="Filtrar por temporada" className="rounded-xl border border-gray-800 p-2">
+          <option value="">Sin temporada</option>
+          {seasons.map((season) => <option key={season.id} value={season.id}>{season.name} · {season.status}</option>)}
+        </select>
+        <select name="round" defaultValue={selectedRoundId} aria-label="Filtrar por jornada" className="rounded-xl border border-gray-800 p-2">
+          <option value="">Todas las jornadas</option>
+          {rounds.map((round) => <option key={round.id} value={round.id}>{round.name}</option>)}
+        </select>
+        <button className="rounded-xl border border-yellow-400/50 px-3 py-2 font-semibold text-yellow-200 hover:bg-yellow-400/10">Aplicar filtros</button>
+      </form>
       <form action={seasonAction} className="grid gap-2 rounded-2xl border border-yellow-400/25 bg-gray-900 p-4 shadow-xl sm:grid-cols-3">
         <input type="hidden" name="action" value="round" />
-        <select name="seasonId" aria-label="Temporada para jornada" required className="rounded-xl border border-gray-800 p-2">
+        <select name="seasonId" defaultValue={selectedSeasonId} aria-label="Temporada para jornada" required className="rounded-xl border border-gray-800 p-2">
           <option value="">Temporada</option>
           {seasons.map((season) => <option key={season.id} value={season.id}>{season.name} · {season.status}</option>)}
         </select>
