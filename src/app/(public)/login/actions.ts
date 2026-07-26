@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { loginInputSchema } from "@/modules/auth/application/login-user";
 import { getSessionCookieOptions } from "@/modules/auth/application/session-service";
@@ -27,7 +28,7 @@ export async function loginAction(
       ...getSessionCookieOptions(process.env.NODE_ENV === "production"),
       expires: result.expiresAt,
     });
-    return { status: "IDLE", message: "" };
+    redirect("/dashboard");
   }
   if (result.status === "PENDING_EMAIL_CONFIRMATION")
     return { status: result.status, message: "Debes confirmar tu correo." };
