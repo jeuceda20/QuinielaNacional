@@ -106,12 +106,11 @@ Hosting: Proveedor gratuito compatible
 4. Proveedores candidatos
 4.1 Hosting
 
-Candidatos iniciales:
+Proveedor seleccionado:
 
-Vercel.
-Netlify, si soporta todos los requisitos.
-Render.
-Otro proveedor gratuito compatible con Next.js y Node.js.
+Netlify, plan Free.
+
+El despliegue usa el runtime de Next.js de Netlify y se conecta a Supabase mediante variables configuradas únicamente para el contexto Production. Las vistas previas no deben recibir secretos ni la base de producción.
 
 La selección final deberá basarse en:
 
@@ -1240,7 +1239,6 @@ El costo obligatorio sea cero.
 
 Antes del despliegue real deberán confirmarse:
 
-Proveedor definitivo de hosting.
 Límites vigentes de los planes gratuitos.
 Versión de Node.js.
 Estrategia de pooling.

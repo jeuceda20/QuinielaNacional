@@ -2175,6 +2175,39 @@ Se mantiene PostgreSQL estándar y Prisma como única vía normal de acceso, por
 
 ---
 
+# ADR-052
+
+## Netlify Free para hosting de producción
+
+### Estado
+
+Aceptada.
+
+---
+
+### Contexto
+
+La aplicación Next.js requiere HTTPS, variables de entorno protegidas, despliegue desde GitHub y un costo obligatorio igual a cero para una comunidad futbolera sin ingresos.
+
+---
+
+### Decisión
+
+La aplicación se desplegará en Netlify Free desde la rama `main`.
+
+- Las variables de producción se configuran solo en el contexto Production.
+- El comando de build ejecuta `npx prisma migrate deploy && npm run build`.
+- Las migraciones usan el Shared Pooler de Supabase en modo session cuando Netlify no dispone de IPv6 para la conexión directa.
+- Preview y ramas no reciben secretos de producción.
+
+---
+
+### Consecuencias
+
+Cada despliegue de producción aplica migraciones pendientes antes de publicar la aplicación. El uso y las condiciones del plan Free deben revisarse periódicamente; si cambian, la aplicación puede trasladarse a otro hosting Node.js compatible sin modificar el dominio.
+
+---
+
 # Resumen de decisiones
 
 Las siguientes tecnologías quedan oficialmente adoptadas:
