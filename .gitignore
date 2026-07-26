@@ -29,6 +29,7 @@ blob-report/
 .env.test
 .env.test.local
 .env.production.local
+.env.pilot.local
 !.env.example
 
 # Prisma local development files
