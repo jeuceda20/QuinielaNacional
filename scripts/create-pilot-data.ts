@@ -20,8 +20,8 @@ try {
   });
   const season = await prisma.season.upsert({
     where: { slug: "piloto-2026" },
-    update: { status: "DRAFT", archivedAt: null },
-    create: { name: "Piloto ficticio 2026", slug: "piloto-2026", status: "DRAFT" },
+    update: { status: "ACTIVE", archivedAt: null },
+    create: { name: "Piloto ficticio 2026", slug: "piloto-2026", status: "ACTIVE" },
   });
   const users = await Promise.all(Array.from({ length: 50 }, (_, index) => {
     const number = String(index + 1).padStart(2, "0");

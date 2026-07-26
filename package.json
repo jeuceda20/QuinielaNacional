@@ -16,6 +16,7 @@
     "db:seed": "npm run prisma:generate && tsx prisma/seed.ts",
     "db:verify-migrations": "node scripts/verify-migrations.mjs",
     "pilot:create": "tsx scripts/create-pilot-data.ts",
+    "pilot:simulate": "tsx scripts/simulate-pilot.ts",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
