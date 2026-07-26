@@ -29,6 +29,11 @@ export default async function PublicLayout({ children }: Readonly<{ children: Re
             <Link href="/results" className="rounded-md px-3 py-2 hover:bg-slate-100">
               Resultados
             </Link>
+            {session && (session.user.role === "ADMIN" || session.user.role === "SUPER_ADMIN") && (
+              <Link href="/admin/seasons" className="rounded-md px-3 py-2 hover:bg-slate-100">
+                Administración
+              </Link>
+            )}
             {session ? (
               <form action="/api/v1/auth/logout" method="post">
                 <button className="rounded-md px-3 py-2 hover:bg-slate-100">Cerrar sesión</button>
