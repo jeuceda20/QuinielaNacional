@@ -6,9 +6,9 @@ import {
   createRegistrationService,
 } from "@/modules/auth/infrastructure/create-auth-services";
 import { registerInputSchema } from "@/modules/auth/schemas/register-input";
+import type { RegisterActionState } from "@/modules/auth/ui/action-states";
 
 import { getRequestIpAddress } from "@/lib/request-metadata";
-import type { RegisterActionState } from "@/modules/auth/ui/action-states";
 
 export async function registerAction(
   _: RegisterActionState,
@@ -35,8 +35,10 @@ export async function registerAction(
   if (!allowed)
     return { success: false, message: "Demasiados intentos. IntÃ©ntalo nuevamente mÃ¡s tarde." };
   try {
-    await createRegistrationService().execute(parsed.data, now);
-    return { success: true, message: "Revisa tu correo para confirmar tu cuenta." };
+    const result = await createRegistrationService().execute(parsed.data, now);
+    return result.emailSent
+      ? { success: true, message: "Te enviamos un correo de confirmación. Revisa Recibidos y Spam." }
+      : { success: false, message: "La cuenta fue creada, pero no pudimos enviar el correo. En Iniciar sesión usa Reenviar correo de confirmación." };
   } catch (error) {
     if (error instanceof RegistrationError)
       return {
