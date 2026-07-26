@@ -55,6 +55,22 @@ export async function matchAction(f: FormData) {
       }),
       now,
     );
+  else if (action === "edit-scheduled") {
+    const input = createMatchSchema.parse({
+      roundId: f.get("roundId"),
+      homeTeamId: f.get("homeTeamId"),
+      awayTeamId: f.get("awayTeamId"),
+      scheduledAt: f.get("scheduledAt"),
+    });
+    if (input.scheduledAt <= now) throw new Error("La nueva fecha debe estar en el futuro.");
+    const teams = await prisma.team.count({ where: { id: { in: [input.homeTeamId, input.awayTeamId] }, isActive: true, deletedAt: null } });
+    if (teams !== 2) throw new Error("Selecciona equipos activos distintos.");
+    const updated = await prisma.match.updateMany({
+      where: { id, archivedAt: null, status: { in: ["SCHEDULED", "RESCHEDULED"] } },
+      data: { homeTeamId: input.homeTeamId, awayTeamId: input.awayTeamId, scheduledAt: input.scheduledAt, predictionClosesAt: new Date(input.scheduledAt.getTime() - 5 * 60_000), status: "RESCHEDULED" },
+    });
+    if (!updated.count) throw new Error("Solo se pueden editar partidos programados.");
+  }
   else if (action === "double") {
     try {
       await new SetDoubleMatch(new PrismaDoubleMatchRepository()).execute(a, id, now);

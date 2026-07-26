@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { RegistrationError } from "@/modules/auth/application/register-user";
 import {
   consumeRegistrationRateLimit,
@@ -37,11 +39,7 @@ export async function registerAction(
 
   try {
     await createRegistrationService().execute(parsed.data, now);
-    return {
-      success: true,
-      message:
-        "Tu solicitud fue enviada. Un administrador debe aprobar tu acceso antes de que puedas iniciar sesión.",
-    };
+    redirect("/login?registered=1");
   } catch (error) {
     if (error instanceof RegistrationError)
       return {

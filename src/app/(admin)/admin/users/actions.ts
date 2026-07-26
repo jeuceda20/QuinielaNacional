@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { z } from "zod";
 
@@ -42,6 +43,8 @@ export async function adminUserAction(formData: FormData) {
     const now = new Date();
     await prisma.user.update({ where: { id: userId }, data: { passwordHash: await new Argon2PasswordHasher().hash(password), mustChangePassword: true } });
     await prisma.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: now } });
+    revalidatePath("/admin/users");
+    redirect("/admin/users?notice=password-reset");
   } else if (["REJECT", "BLOCK", "UNBLOCK", "DISABLE", "ENABLE"].includes(action)) {
     await new ManageUserLifecycle(new PrismaUserRepository(), new PrismaUserLifecycleRepository()).execute({ ...input, action: action as UserLifecycleAction }, new Date());
   } else if (action === "PROMOTE" || action === "DEMOTE") {

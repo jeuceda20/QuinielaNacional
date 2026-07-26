@@ -26,12 +26,13 @@ export default async function AdminUsersPage({ searchParams }: Props) {
   };
   const result = await new PrismaAdminUserDirectory().list(filters);
   return (
-    <AdminUsersTable
-      users={result.users}
-      total={result.total}
-      page={result.page}
-      filters={filters}
-      actorRole={session.user.role}
-    />
+    <>
+      {params.notice === "password-reset" && (
+        <p role="status" className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3 text-sm text-emerald-200">
+          Contraseña temporal actualizada. El usuario deberá cambiarla al iniciar sesión.
+        </p>
+      )}
+      <AdminUsersTable users={result.users} total={result.total} page={result.page} filters={filters} actorRole={session.user.role} />
+    </>
   );
 }

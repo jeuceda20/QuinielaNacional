@@ -50,6 +50,7 @@ export default async function MatchesPage({ searchParams }: Props) {
     }),
   ]);
   const now = new Date();
+  const toDateTimeLocal = (date: Date) => new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
   const doubleRoundIds = new Set(matches.filter((match) => match.isDoublePoints).map((match) => match.roundId));
   return (
     <section className="w-full space-y-6">
@@ -198,6 +199,16 @@ export default async function MatchesPage({ searchParams }: Props) {
                     ) : <p className="mt-3 text-gray-400">Los pronósticos se mostrarán al cerrar el plazo.</p>}
                     <form action={matchAction} className="mt-2 grid gap-1">
                       <input type="hidden" name="matchId" value={m.id} />
+                      <input type="hidden" name="roundId" value={m.roundId} />
+                      {['SCHEDULED', 'RESCHEDULED'].includes(m.status) && (
+                        <div className="grid gap-1 rounded border border-yellow-400/20 p-2">
+                          <p className="text-xs font-semibold text-yellow-200">Editar equipos y hora</p>
+                          <select name="homeTeamId" defaultValue={m.homeTeamId} className="rounded border border-gray-800 p-1">{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select>
+                          <select name="awayTeamId" defaultValue={m.awayTeamId} className="rounded border border-gray-800 p-1">{teams.map((team) => <option key={team.id} value={team.id}>{team.name}</option>)}</select>
+                          <input name="scheduledAt" type="datetime-local" defaultValue={toDateTimeLocal(m.scheduledAt)} className="rounded border border-gray-800 p-1" />
+                          <button name="action" value="edit-scheduled" className="text-left text-yellow-300">Guardar cambios del partido</button>
+                        </div>
+                      )}
                       <input
                         name="reason"
                         placeholder="Motivo (mínimo 3 caracteres)"
