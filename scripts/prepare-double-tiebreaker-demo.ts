@@ -1,4 +1,5 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import argon2 from "argon2";
 import { config } from "dotenv";
 
 config({ path: ".env.pilot.local", quiet: true });
@@ -30,11 +31,12 @@ try {
   const season = await prisma.season.findUniqueOrThrow({ where: { slug: "piloto-2026" } });
   const admin = await prisma.user.findUniqueOrThrow({ where: { emailNormalized: "admin-piloto@example.invalid" } });
   const team = await prisma.team.findFirstOrThrow({ where: { deletedAt: null } });
+  const passwordHash = await argon2.hash("PilotoSeguro2026!", { type: argon2.argon2id });
   const demoUsers = await Promise.all(
     ["empate-normal", "empate-jornada"].map((nickname) =>
       prisma.user.upsert({
         where: { emailNormalized: `${nickname}@example.invalid` },
-        update: { status: "APPROVED", isTestUser: true },
+        update: { status: "APPROVED", isTestUser: true, passwordHash },
         create: {
           firstName: "Demo",
           lastName: nickname === "empate-normal" ? "Normal" : "Jornada",
@@ -42,7 +44,7 @@ try {
           nicknameNormalized: nickname,
           email: `${nickname}@example.invalid`,
           emailNormalized: `${nickname}@example.invalid`,
-          passwordHash: "pilot-not-for-login",
+          passwordHash,
           role: "USER",
           status: "APPROVED",
           emailVerifiedAt: new Date(),
