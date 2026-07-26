@@ -18,6 +18,6 @@ export async function changePasswordAction(_: { success: boolean; message: strin
   const token = (await cookies()).get("session")?.value;
   const session = token ? await new SessionService(new PrismaSessionRepository()).validate(token, new Date()) : null;
   if (!session) return { success: false, message: "Tu sesión ya no es válida." };
-  await prisma.user.update({ where: { id: session.user.id }, data: { passwordHash: await new Argon2PasswordHasher().hash(parsed.data.password) } });
+  await prisma.user.update({ where: { id: session.user.id }, data: { passwordHash: await new Argon2PasswordHasher().hash(parsed.data.password), mustChangePassword: false } });
   return { success: true, message: "Tu contraseña fue actualizada." };
 }

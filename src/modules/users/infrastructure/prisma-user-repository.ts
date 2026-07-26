@@ -22,6 +22,7 @@ function toUserEntity(user: PrismaUser): UserEntity {
     email: user.email,
     emailNormalized: user.emailNormalized,
     passwordHash: user.passwordHash,
+    mustChangePassword: user.mustChangePassword,
     role: user.role,
     status: user.status,
     emailVerifiedAt: user.emailVerifiedAt,

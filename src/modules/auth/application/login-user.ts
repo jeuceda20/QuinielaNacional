@@ -18,6 +18,7 @@ export type LoginResult = Readonly<{
   status: "AUTHENTICATED" | "PENDING_APPROVAL" | "INVALID";
   token?: string;
   expiresAt?: Date;
+  mustChangePassword?: boolean;
 }>;
 
 export class LoginUser {
@@ -46,6 +47,6 @@ export class LoginUser {
       ipAddress: input.ipAddress,
       userAgent: input.userAgent,
     });
-    return { status: "AUTHENTICATED", token: session.token, expiresAt: session.expiresAt };
+    return { status: "AUTHENTICATED", token: session.token, expiresAt: session.expiresAt, mustChangePassword: user.mustChangePassword === true };
   }
 }

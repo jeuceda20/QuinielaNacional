@@ -19,6 +19,7 @@ const user: PrismaUser = {
   email: "ana@example.com",
   emailNormalized: "ana@example.com",
   passwordHash: "password-hash",
+  mustChangePassword: false,
   role: "USER",
   status: "PENDING_EMAIL_CONFIRMATION",
   emailVerifiedAt: null,

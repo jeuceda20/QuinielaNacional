@@ -40,7 +40,7 @@ export async function adminUserAction(formData: FormData) {
     const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, status: true } });
     if (!target || target.status !== "APPROVED" || (target.role === "SUPER_ADMIN" && current.role !== "SUPER_ADMIN")) throw new Error("No es posible restablecer esta cuenta.");
     const now = new Date();
-    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await new Argon2PasswordHasher().hash(password) } });
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash: await new Argon2PasswordHasher().hash(password), mustChangePassword: true } });
     await prisma.session.updateMany({ where: { userId, revokedAt: null }, data: { revokedAt: now } });
   } else if (["REJECT", "BLOCK", "UNBLOCK", "DISABLE", "ENABLE"].includes(action)) {
     await new ManageUserLifecycle(new PrismaUserRepository(), new PrismaUserLifecycleRepository()).execute({ ...input, action: action as UserLifecycleAction }, new Date());

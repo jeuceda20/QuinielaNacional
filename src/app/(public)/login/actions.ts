@@ -28,7 +28,7 @@ export async function loginAction(
       ...getSessionCookieOptions(process.env.NODE_ENV === "production"),
       expires: result.expiresAt,
     });
-    redirect("/dashboard");
+    redirect(result.mustChangePassword ? "/change-password" : "/dashboard");
   }
   if (result.status === "PENDING_APPROVAL")
     return { status: result.status, message: "Tu cuenta está pendiente de aprobación." };

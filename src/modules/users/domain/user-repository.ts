@@ -17,6 +17,7 @@ export type UserEntity = Readonly<{
   email: string;
   emailNormalized: string;
   passwordHash: string;
+  mustChangePassword?: boolean;
   role: UserRole;
   status: UserStatus;
   emailVerifiedAt: Date | null;
