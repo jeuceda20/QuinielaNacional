@@ -148,7 +148,15 @@ export default async function MatchesPage() {
                     ) : <p className="mt-3 text-gray-400">Los pronósticos se mostrarán al cerrar el plazo.</p>}
                     <form action={matchAction} className="mt-2 grid gap-1">
                       <input type="hidden" name="matchId" value={m.id} />
-                      <input name="reason" placeholder="Motivo" className="rounded border border-gray-800 p-1" />
+                      <input
+                        name="reason"
+                        placeholder="Motivo (mínimo 3 caracteres)"
+                        aria-label={`Motivo para ${m.homeTeam.name}`}
+                        minLength={3}
+                        required
+                        className="rounded border border-gray-800 p-1"
+                      />
+                      <p className="text-xs text-gray-400">Obligatorio para reprogramar, suspender o cancelar.</p>
                       <input
                         name="scheduledAt"
                         type="datetime-local"
@@ -159,7 +167,7 @@ export default async function MatchesPage() {
                         Reprogramar
                       </button>
                       {!m.isDoublePoints && (
-                        <button name="action" value="double" className="text-left text-yellow-300">
+                        <button formNoValidate name="action" value="double" className="text-left text-yellow-300">
                           Designar doble
                         </button>
                       )}
@@ -169,7 +177,7 @@ export default async function MatchesPage() {
                         </button>
                       )}
                       {m.status === "SUSPENDED" && (
-                        <button name="action" value="resume" className="text-left text-yellow-300">
+                        <button formNoValidate name="action" value="resume" className="text-left text-yellow-300">
                           Reanudar
                         </button>
                       )}
