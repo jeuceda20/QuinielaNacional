@@ -6,7 +6,7 @@ import { SessionService } from "@/modules/auth/application/session-service";
 import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-session-repository";
 
 export async function POST(request: NextRequest) {
-  const response = new NextResponse(null, { status: 204 });
+  const response = NextResponse.redirect(new URL("/", request.url), { status: 303 });
   await new LogoutUser(new SessionService(new PrismaSessionRepository()), {
     clear: async () => {
       response.cookies.set("session", "", { httpOnly: true, maxAge: 0, path: "/" });
