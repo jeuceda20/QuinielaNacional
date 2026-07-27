@@ -11,7 +11,7 @@ import { PrismaSessionRepository } from "@/modules/auth/infrastructure/prisma-se
 
 import { prisma } from "@/lib/prisma";
 
-const schema = z.object({ password: z.string().min(12, "Usa al menos 12 caracteres."), passwordConfirmation: z.string() }).refine((value) => value.password === value.passwordConfirmation, { path: ["passwordConfirmation"], message: "Las contraseñas no coinciden." });
+const schema = z.object({ password: z.string().min(10, "Usa al menos 10 caracteres."), passwordConfirmation: z.string() }).refine((value) => value.password === value.passwordConfirmation, { path: ["passwordConfirmation"], message: "Las contraseñas no coinciden." });
 
 export async function changePasswordAction(_: { success: boolean; message: string }, formData: FormData) {
   const parsed = schema.safeParse({ password: formData.get("password"), passwordConfirmation: formData.get("passwordConfirmation") });

@@ -132,8 +132,8 @@ export function AdminUsersTable({
                             <input
                               name="temporaryPassword"
                               type="password"
-                              minLength={12}
-                              placeholder="Contraseña temporal (12+)"
+                              placeholder="Contraseña temporal (10+)"
+                              minLength={10}
                               className="rounded border border-gray-800 p-1"
                             />
                             <button name="action" value="RESET_PASSWORD" className="text-left text-amber-300">

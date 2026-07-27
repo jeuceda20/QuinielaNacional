@@ -48,6 +48,7 @@ export function RegisterForm({ teams }: Readonly<{ teams: readonly Team[] }>) {
           name="password"
           type="password"
           autoComplete="new-password"
+          minLength={10}
           error={error("password")}
         />
         <Field
@@ -55,11 +56,12 @@ export function RegisterForm({ teams }: Readonly<{ teams: readonly Team[] }>) {
           name="passwordConfirmation"
           type="password"
           autoComplete="new-password"
+          minLength={10}
           error={error("passwordConfirmation")}
         />
       </div>
       <p className="-mt-3 text-xs text-gray-400">
-        La contraseña debe tener entre 12 y 128 caracteres. Usa una frase larga que no reutilices en otros sitios.
+        La contraseña debe tener entre 10 y 128 caracteres. Usa una frase larga que no reutilices en otros sitios.
       </p>
       <label className="flex items-start gap-3 text-sm text-gray-300">
         <input name="acceptedRules" type="checkbox" required className="mt-1 size-4 accent-blue-600" />
@@ -92,12 +94,14 @@ function Field({
   name,
   type = "text",
   autoComplete,
+  minLength,
   error,
 }: Readonly<{
   label: string;
   name: string;
   type?: string;
   autoComplete?: string;
+  minLength?: number;
   error?: string;
 }>) {
   return (
@@ -107,6 +111,7 @@ function Field({
         name={name}
         type={type}
         autoComplete={autoComplete}
+        minLength={minLength}
         required
         className="rounded-xl border border-gray-800 bg-gray-950 px-3 py-2 text-white outline-none transition placeholder:text-gray-600 focus:border-cyan-400"
         aria-invalid={Boolean(error)}

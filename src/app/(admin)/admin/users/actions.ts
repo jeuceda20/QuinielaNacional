@@ -37,7 +37,7 @@ export async function adminUserAction(formData: FormData) {
   if (action === "APPROVE") {
     await new ApproveUser(new PrismaUserRepository(), new PrismaUserApprovalRepository()).execute({ ...input, addToActiveSeason: true }, new Date());
   } else if (action === "RESET_PASSWORD") {
-    const password = z.string().min(12, "La contraseña temporal debe tener al menos 12 caracteres.").max(128).parse(formData.get("temporaryPassword"));
+    const password = z.string().min(10, "La contraseña temporal debe tener al menos 10 caracteres.").max(128).parse(formData.get("temporaryPassword"));
     const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, status: true } });
     if (!target || target.status !== "APPROVED" || (target.role === "SUPER_ADMIN" && current.role !== "SUPER_ADMIN")) throw new Error("No es posible restablecer esta cuenta.");
     const now = new Date();

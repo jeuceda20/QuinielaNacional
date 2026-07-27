@@ -8,7 +8,7 @@ export const initialSetupSchema = z.object({
   lastName: z.string().trim().min(1).max(100),
   nickname: z.string().trim().min(3).max(50),
   email: z.string().trim().email(),
-  password: z.string().min(12).max(128),
+  password: z.string().min(10).max(128),
   favoriteTeamId: z.string().uuid(),
   setupToken: z.string().min(1),
 });

@@ -50,8 +50,8 @@ export default async function SetupPage({
           name="password"
           required
           type="password"
-          minLength={12}
-          placeholder="Contraseña (mínimo 12 caracteres)"
+          minLength={10}
+          placeholder="Contraseña (mínimo 10 caracteres)"
           className="rounded border p-2"
         />
         <select name="favoriteTeamId" required className="rounded border p-2">
