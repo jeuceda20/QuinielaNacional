@@ -23,12 +23,12 @@ type MatchCard = Readonly<{
 }>;
 
 function groupByDayAndPhase(matches: readonly MatchCard[]) {
-  const groups = new Map<string, { day: string; phase: string; matches: MatchCard[] }>();
+  const groups = new Map<string, { id: string; day: string; phase: string; matches: MatchCard[] }>();
   for (const match of matches) {
     const date = new Date(match.scheduledAt);
     const day = date.toLocaleDateString("es-HN", { weekday: "long", day: "numeric", month: "long" });
     const key = `${date.toISOString().slice(0, 10)}:${match.phase}`;
-    const group = groups.get(key) ?? { day, phase: match.phase, matches: [] };
+    const group = groups.get(key) ?? { id: key, day, phase: match.phase, matches: [] };
     group.matches.push(match);
     groups.set(key, group);
   }
@@ -109,7 +109,7 @@ export default async function PredictionsPage() {
           <span className="rounded-full bg-cyan-400/10 px-3 py-1 text-sm text-cyan-200">{activeGroups.reduce((total, group) => total + group.matches.length, 0)} partidos</span>
         </div>
         {activeGroups.length ? activeGroups.map((group) => (
-          <div key={`${group.day}-${group.phase}`} className="space-y-3">
+          <div key={group.id} className="space-y-3">
             <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold capitalize">{group.day}</h3><span className="rounded-full border border-gray-800 bg-gray-900 px-2 py-1 text-xs text-gray-300">{group.phase}</span></div>
             <div className="grid gap-4 md:grid-cols-2">{group.matches.map((match) => <PredictionForm key={match.id} match={match} />)}</div>
           </div>
@@ -119,7 +119,7 @@ export default async function PredictionsPage() {
       <section className="space-y-5 border-t border-gray-800 pt-8">
         <div><h2 className="text-xl font-bold">Historial procesado</h2><p className="mt-1 text-sm text-gray-400">Consulta tu pick y el resultado oficial de los partidos finalizados.</p></div>
         {historyGroups.length ? historyGroups.map((group) => (
-          <div key={`${group.day}-${group.phase}`} className="space-y-3">
+          <div key={group.id} className="space-y-3">
             <div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold capitalize">{group.day}</h3><span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2 py-1 text-xs text-emerald-200">{group.phase}</span></div>
             <div className="grid gap-4 md:grid-cols-2">{group.matches.map((match) => <PredictionForm key={match.id} match={match} />)}</div>
           </div>
