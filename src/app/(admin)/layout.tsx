@@ -14,6 +14,7 @@ export default function AdminLayout({ children }: Readonly<{ children: React.Rea
             <Link href="/admin/matches" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Jornadas y partidos</Link>
             <Link href="/admin/users" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Usuarios</Link>
             <Link href="/admin/audit" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Auditoría</Link>
+            <Link href="/admin/exports" className="rounded-full px-3 py-2 hover:bg-yellow-400/10">Exportaciones</Link>
             <Link href="/dashboard" className="rounded-full border border-gray-700 px-3 py-2 text-gray-300 hover:border-yellow-300 hover:text-yellow-200">Volver al inicio</Link>
           </nav>
         </div>
