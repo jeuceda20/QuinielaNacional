@@ -35,8 +35,7 @@ export class PrismaUserApprovalRepository implements UserApprovalRepository {
           where: { status: "ACTIVE", archivedAt: null },
           select: { id: true },
         });
-        if (!season) return { status: "ACTIVE_SEASON_NOT_FOUND" };
-        seasonId = season.id;
+        seasonId = season?.id ?? null;
       }
 
       const updated = await transaction.user.updateMany({

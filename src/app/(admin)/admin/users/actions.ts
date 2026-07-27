@@ -35,7 +35,7 @@ export async function adminUserAction(formData: FormData) {
   const input = { actor: { id: current.id, role: current.role, status: current.status }, userId, reason };
 
   if (action === "APPROVE") {
-    await new ApproveUser(new PrismaUserRepository(), new PrismaUserApprovalRepository()).execute({ ...input, addToActiveSeason: false }, new Date());
+    await new ApproveUser(new PrismaUserRepository(), new PrismaUserApprovalRepository()).execute({ ...input, addToActiveSeason: true }, new Date());
   } else if (action === "RESET_PASSWORD") {
     const password = z.string().min(12, "La contraseña temporal debe tener al menos 12 caracteres.").max(128).parse(formData.get("temporaryPassword"));
     const target = await prisma.user.findUnique({ where: { id: userId }, select: { role: true, status: true } });

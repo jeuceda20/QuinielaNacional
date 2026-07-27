@@ -126,13 +126,12 @@ export async function seasonAction(f: FormData) {
     });
     if (!updated.count) throw new Error("Solo se pueden archivar temporadas en borrador o cerradas.");
   }
-  else if (action === "participant")
-    await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(
-      a,
-      String(f.get("seasonId")),
-      String(f.get("userId")),
-      now,
-    );
+  else if (action === "participant") {
+    const seasonId = String(f.get("seasonId"));
+    const userId = String(f.get("userId"));
+    const existing = await prisma.seasonParticipant.findUnique({ where: { seasonId_userId: { seasonId, userId } }, select: { id: true } });
+    if (!existing) await new AddSeasonParticipant(new PrismaSeasonParticipantRepository()).execute(a, seasonId, userId, now);
+  }
   else if (action === "round") {
     const seasonId = String(f.get("seasonId"));
     const last = await prisma.round.aggregate({
