@@ -16,7 +16,7 @@ try {
   await prisma.user.upsert({
     where: { emailNormalized: "admin-piloto@example.invalid" },
     update: { role: "SUPER_ADMIN", status: "APPROVED", isTestUser: true, passwordHash: adminPasswordHash },
-    create: { firstName: "Admin", lastName: "Piloto", nickname: "admin-piloto", nicknameNormalized: "admin-piloto", email: "admin-piloto@example.invalid", emailNormalized: "admin-piloto@example.invalid", passwordHash: adminPasswordHash, role: "SUPER_ADMIN", status: "APPROVED", emailVerifiedAt: new Date(), approvedAt: new Date(), isTestUser: true, favoriteTeam: { connect: { id: teams[0]!.id } } },
+    create: { firstName: "Admin", lastName: "Piloto", nickname: "admin-piloto", nicknameNormalized: "admin-piloto", email: "admin-piloto@example.invalid", emailNormalized: "admin-piloto@example.invalid", passwordHash: adminPasswordHash, role: "SUPER_ADMIN", status: "APPROVED", approvedAt: new Date(), isTestUser: true, favoriteTeam: { connect: { id: teams[0]!.id } } },
   });
   const season = await prisma.season.upsert({
     where: { slug: "piloto-2026" },
@@ -28,7 +28,7 @@ try {
     return prisma.user.upsert({
       where: { emailNormalized: `piloto-${number}@example.invalid` },
       update: { isTestUser: true, status: "APPROVED" },
-      create: { firstName: "Piloto", lastName: number, nickname: `piloto-${number}`, nicknameNormalized: `piloto-${number}`, email: `piloto-${number}@example.invalid`, emailNormalized: `piloto-${number}@example.invalid`, passwordHash: "pilot-not-for-login", role: "USER", status: "APPROVED", emailVerifiedAt: new Date(), approvedAt: new Date(), isTestUser: true, favoriteTeam: { connect: { id: teams[index % teams.length]!.id } } },
+      create: { firstName: "Piloto", lastName: number, nickname: `piloto-${number}`, nicknameNormalized: `piloto-${number}`, email: `piloto-${number}@example.invalid`, emailNormalized: `piloto-${number}@example.invalid`, passwordHash: "pilot-not-for-login", role: "USER", status: "APPROVED", approvedAt: new Date(), isTestUser: true, favoriteTeam: { connect: { id: teams[index % teams.length]!.id } } },
     });
   }));
   await prisma.seasonParticipant.createMany({ data: users.map((user) => ({ seasonId: season.id, userId: user.id, isTestData: true })), skipDuplicates: true });

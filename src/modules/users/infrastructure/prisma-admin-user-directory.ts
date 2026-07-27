@@ -6,7 +6,6 @@ export type AdminUserFilters = Readonly<{
   query?: string;
   status?: string;
   role?: string;
-  verified?: string;
   teamId?: string;
   participation?: string;
   page?: number;
@@ -26,7 +25,6 @@ export type AdminDirectoryUser = Readonly<{
     | "DISABLED";
   team: string | null;
   createdAt: Date;
-  emailVerifiedAt: Date | null;
   activeSeason: string | null;
 }>;
 export class PrismaAdminUserDirectory {
@@ -39,8 +37,6 @@ export class PrismaAdminUserDirectory {
     const where: Prisma.UserWhereInput = { deletedAt: null };
     if (filters.status) where.status = filters.status as Prisma.EnumUserStatusFilter;
     if (filters.role) where.role = filters.role as Prisma.EnumUserRoleFilter;
-    if (filters.verified === "yes") where.emailVerifiedAt = { not: null };
-    if (filters.verified === "no") where.emailVerifiedAt = null;
     if (filters.teamId) where.favoriteTeamId = filters.teamId;
     if (filters.participation === "active")
       where.seasonParticipations = { some: { season: { status: "ACTIVE", archivedAt: null } } };
@@ -84,7 +80,6 @@ export class PrismaAdminUserDirectory {
         status: u.status,
         team: u.favoriteTeam?.name ?? null,
         createdAt: u.createdAt,
-        emailVerifiedAt: u.emailVerifiedAt,
         activeSeason: u.seasonParticipations[0]?.season.name ?? null,
       })),
     };

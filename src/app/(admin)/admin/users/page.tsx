@@ -19,7 +19,6 @@ export default async function AdminUsersPage({ searchParams }: Props) {
     query: params.q,
     status: params.status,
     role: params.role,
-    verified: params.verified,
     teamId: params.team,
     participation: params.participation,
     page: Number(params.page) || 1,

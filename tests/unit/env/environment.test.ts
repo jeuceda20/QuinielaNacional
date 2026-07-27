@@ -10,17 +10,12 @@ const validEnvironment: NodeJS.ProcessEnv = {
   APP_TIMEZONE: "America/Tegucigalpa",
   SESSION_SECRET: "test-session-secret",
   INITIAL_SETUP_TOKEN: "test-initial-setup-token",
-  SMTP_HOST: "localhost",
-  SMTP_PORT: "1025",
-  SMTP_USER: "test",
-  SMTP_APP_PASSWORD: "test-password",
 };
 
 describe("validateEnvironment", () => {
   it("parses typed values and disables omitted feature flags", () => {
     const environment = validateEnvironment(validEnvironment);
 
-    expect(environment.SMTP_PORT).toBe(1025);
     expect(environment.ENABLE_DIAGNOSTICS).toBe(false);
     expect(environment.ENABLE_SQL_CONSOLE).toBe(false);
   });
@@ -31,7 +26,7 @@ describe("validateEnvironment", () => {
       ...validEnvironment,
       SESSION_SECRET: secretValue,
     };
-    delete invalidEnvironment.SMTP_HOST;
+    delete invalidEnvironment.SESSION_SECRET;
 
     expect(() => validateEnvironment(invalidEnvironment)).toThrow(EnvironmentValidationError);
 
@@ -39,7 +34,7 @@ describe("validateEnvironment", () => {
       validateEnvironment(invalidEnvironment);
     } catch (error) {
       expect(error).toBeInstanceOf(EnvironmentValidationError);
-      expect((error as EnvironmentValidationError).variableNames).toEqual(["SMTP_HOST"]);
+      expect((error as EnvironmentValidationError).variableNames).toEqual(["SESSION_SECRET"]);
       expect((error as Error).message).not.toContain(secretValue);
     }
   });

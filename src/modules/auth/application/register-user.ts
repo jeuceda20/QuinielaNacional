@@ -1,6 +1,5 @@
 import type { PasswordHasher } from "@/modules/auth/domain/password-hasher";
 import type { RegisterInput } from "@/modules/auth/schemas/register-input";
-import type { EmailProvider } from "@/modules/email/domain/email-provider";
 import type { TeamRepository } from "@/modules/sports/domain/sports-repositories";
 import type { UserRepository } from "@/modules/users/domain/user-repository";
 
@@ -15,19 +14,11 @@ export class RegistrationError extends Error {
 
 export type RegisterUserResult = Readonly<{ userId: string; emailSent: false }>;
 
-/** Kept temporarily so existing integrations can construct the service while SMTP is disabled. */
-export type EmailVerificationTokenRepository = Readonly<{
-  create(input: { userId: string; tokenHash: string; expiresAt: Date }): Promise<void>;
-}>;
-
 export class RegisterUser {
   public constructor(
     private readonly users: UserRepository,
     private readonly teams: TeamRepository,
     private readonly passwordHasher: PasswordHasher,
-    _verificationTokens?: EmailVerificationTokenRepository,
-    _emailProvider?: EmailProvider,
-    _appUrl?: string,
   ) {}
 
   public async execute(input: RegisterInput, now: Date): Promise<RegisterUserResult> {

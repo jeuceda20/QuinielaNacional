@@ -1,7 +1,6 @@
 export type SystemStatus = Readonly<{
   application: "UP";
   database: "UP" | "DOWN";
-  smtpConfigured: boolean;
   version: string;
   environment: string;
   diagnosticsEnabled: boolean;
@@ -15,7 +14,6 @@ export class GetSystemStatus {
     private readonly config: {
       version: string;
       environment: string;
-      smtpConfigured: boolean;
       diagnosticsEnabled: boolean;
     },
   ) {}
@@ -23,7 +21,6 @@ export class GetSystemStatus {
     return {
       application: "UP",
       database: (await this.repository.checkDatabase()) ? "UP" : "DOWN",
-      smtpConfigured: this.config.smtpConfigured,
       version: this.config.version,
       environment: this.config.environment,
       diagnosticsEnabled: this.config.diagnosticsEnabled,

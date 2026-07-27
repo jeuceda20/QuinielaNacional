@@ -59,11 +59,6 @@ export function AdminUsersTable({
           <option value="ADMIN">Administrador</option>
           <option value="SUPER_ADMIN">Superadministrador</option>
         </select>
-        <select name="verified" defaultValue={filters.verified} className="rounded-xl border border-gray-800 p-2">
-          <option value="">Correo: todos</option>
-          <option value="yes">Confirmado</option>
-          <option value="no">Sin confirmar</option>
-        </select>
         <button className="rounded-xl bg-yellow-400 px-4 py-2 font-semibold text-gray-950 hover:bg-yellow-300 sm:col-span-4">
           Aplicar filtros
         </button>
@@ -85,7 +80,6 @@ export function AdminUsersTable({
                   "Estado",
                   "Rol",
                   "Registro",
-                  "Confirmación",
                   "Temporada",
                   "Detalle",
                 ].map((h) => (
@@ -105,9 +99,6 @@ export function AdminUsersTable({
                   <td className="px-3 py-3">{labels[u.status]}</td>
                   <td className="px-3 py-3">{u.role}</td>
                   <td className="px-3 py-3">{u.createdAt.toLocaleDateString("es-HN")}</td>
-                  <td className="px-3 py-3">
-                    {u.emailVerifiedAt?.toLocaleDateString("es-HN") ?? "—"}
-                  </td>
                   <td className="px-3 py-3">{u.activeSeason ?? "—"}</td>
                   <td className="px-3 py-3">
                     <details>

@@ -35,7 +35,7 @@ async function recordCsvExport(actorUserId: string, exportType: string, rowCount
 
 async function csvRows(type: Exclude<ExportType, "backup-json">) {
   if (type === "users") {
-    const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, nickname: true, firstName: true, lastName: true, email: true, role: true, status: true, emailVerifiedAt: true, createdAt: true, favoriteTeam: { select: { name: true } } } });
+    const users = await prisma.user.findMany({ orderBy: { createdAt: "asc" }, select: { id: true, nickname: true, firstName: true, lastName: true, email: true, role: true, status: true, createdAt: true, favoriteTeam: { select: { name: true } } } });
     return users.map(({ favoriteTeam, ...user }) => ({ ...user, favoriteTeam: favoriteTeam?.name ?? "" }));
   }
   if (type === "matches") {

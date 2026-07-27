@@ -37,7 +37,6 @@ export default async function DiagnosticsPage() {
     new GetSystemStatus(new PrismaSystemStatusRepository(), {
       version: process.env.npm_package_version ?? "0.1.0",
       environment: env.NODE_ENV,
-      smtpConfigured: Boolean(env.SMTP_HOST && env.SMTP_USER),
       diagnosticsEnabled,
     }).execute(),
     new DiagnosticRunHistory(new PrismaDiagnosticRunHistoryRepository()).list(1, 10),
@@ -51,10 +50,9 @@ export default async function DiagnosticsPage() {
         <p className="text-sm text-slate-600">Estado operativo y verificaciones de consistencia.</p>
       </div>
 
-      <div className="grid gap-3 rounded bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 rounded bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-3">
         <StatusItem label="Aplicacion" value={systemStatus.application} />
         <StatusItem label="Base de datos" value={systemStatus.database} />
-        <StatusItem label="SMTP configurado" value={systemStatus.smtpConfigured ? "SI" : "NO"} />
         <StatusItem
           label="Diagnosticos"
           value={systemStatus.diagnosticsEnabled ? "HABILITADOS" : "DESHABILITADOS"}

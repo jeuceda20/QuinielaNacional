@@ -20,7 +20,6 @@ export type UserEntity = Readonly<{
   mustChangePassword?: boolean;
   role: UserRole;
   status: UserStatus;
-  emailVerifiedAt: Date | null;
   approvedAt: Date | null;
   approvedById: string | null;
   rejectedAt: Date | null;

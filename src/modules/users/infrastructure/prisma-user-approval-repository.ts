@@ -22,7 +22,7 @@ export class PrismaUserApprovalRepository implements UserApprovalRepository {
     return this.database.$transaction(async (transaction) => {
       const user = await transaction.user.findFirst({
         where: { id: input.userId, deletedAt: null },
-        select: { id: true, email: true, firstName: true, status: true, emailVerifiedAt: true },
+        select: { id: true, email: true, firstName: true, status: true },
       });
       if (!user) return { status: "NOT_FOUND" };
       if (user.status === "APPROVED") return { status: "ALREADY_APPROVED" };

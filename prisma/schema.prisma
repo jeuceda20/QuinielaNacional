@@ -164,7 +164,6 @@ model User {
   mustChangePassword Boolean    @default(false)
   role               UserRole   @default(USER)
   status             UserStatus @default(PENDING_APPROVAL)
-  emailVerifiedAt    DateTime?  @db.Timestamptz(6)
   approvedAt         DateTime?  @db.Timestamptz(6)
   approvedById       String?    @db.Uuid
   rejectedAt         DateTime?  @db.Timestamptz(6)
@@ -185,7 +184,6 @@ model User {
   blockedBy                   User?                    @relation("UserBlockedBy", fields: [blockedById], references: [id])
   blockedUsers                User[]                   @relation("UserBlockedBy")
   closedSeasons               Season[]                 @relation("SeasonClosedBy")
-  emailVerificationTokens     EmailVerificationToken[]
   exportRuns                  ExportRun[]              @relation("ExportRunRequestedBy")
   favoriteTeam                Team?                    @relation("FavoriteTeam", fields: [favoriteTeamId], references: [id], onDelete: SetNull)
   matchScheduleChanges        MatchScheduleHistory[]   @relation("MatchScheduleChangedBy")
@@ -194,7 +192,6 @@ model User {
   matchResultsRecorded        MatchResult[]            @relation("MatchResultRecordedBy")
   notifications               Notification[]
   operationalLocks            OperationalLock[]        @relation("OperationalLockAcquiredBy")
-  passwordResetTokens         PasswordResetToken[]
   predictions                 Prediction[]
   predictionScores            PredictionScore[]
   predictionScoresCalculated  PredictionScore[]        @relation("PredictionScoreCalculatedBy")
@@ -232,35 +229,6 @@ model Session {
   @@index([userId])
   @@index([expiresAt])
   @@index([revokedAt])
-}
-
-model EmailVerificationToken {
-  id        String    @id @default(uuid()) @db.Uuid
-  userId    String    @db.Uuid
-  tokenHash String    @unique @db.VarChar(255)
-  expiresAt DateTime  @db.Timestamptz(6)
-  usedAt    DateTime? @db.Timestamptz(6)
-  createdAt DateTime  @default(now()) @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
-}
-
-model PasswordResetToken {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @db.Uuid
-  tokenHash   String    @unique @db.VarChar(255)
-  expiresAt   DateTime  @db.Timestamptz(6)
-  usedAt      DateTime? @db.Timestamptz(6)
-  requestedIp String?   @db.VarChar(64)
-  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([expiresAt])
 }
 
 model RateLimitBucket {

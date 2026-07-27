@@ -22,7 +22,6 @@ const user: PrismaUser = {
   mustChangePassword: false,
   role: "USER",
   status: "PENDING_EMAIL_CONFIRMATION",
-  emailVerifiedAt: null,
   approvedAt: null,
   approvedById: null,
   rejectedAt: null,

@@ -4,7 +4,6 @@ import {
   AuthorizationRole,
   canApproveUser,
 } from "@/modules/auth/domain/authorization-policies";
-import type { EmailProvider } from "@/modules/email/domain/email-provider";
 import type { UserRepository } from "@/modules/users/domain/user-repository";
 
 export type ApprovalActor = Readonly<{
@@ -67,7 +66,6 @@ export class ApproveUser {
   public constructor(
     private readonly users: UserRepository,
     private readonly approvals: UserApprovalRepository,
-    _emails?: EmailProvider,
   ) {}
 
   public async execute(input: ApproveUserInput, now: Date): Promise<{ alreadyApproved: boolean }> {

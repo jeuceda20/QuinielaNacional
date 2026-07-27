@@ -25,7 +25,6 @@ function toUserEntity(user: PrismaUser): UserEntity {
     mustChangePassword: user.mustChangePassword,
     role: user.role,
     status: user.status,
-    emailVerifiedAt: user.emailVerifiedAt,
     approvedAt: user.approvedAt,
     approvedById: user.approvedById,
     rejectedAt: user.rejectedAt,

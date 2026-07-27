@@ -19,7 +19,6 @@ export class PrismaInitialSetupRepository implements InitialSetupRepository {
           favoriteTeam: { connect: { id: favoriteTeamId } },
           role: "SUPER_ADMIN",
           status: "APPROVED",
-          emailVerifiedAt: now,
           approvedAt: now,
         },
       });
