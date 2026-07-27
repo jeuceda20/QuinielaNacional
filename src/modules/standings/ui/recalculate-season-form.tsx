@@ -9,9 +9,9 @@ export function RecalculateSeasonForm({
   const [processing, setProcessing] = useState(false),
     [message, setMessage] = useState("");
   return (
-    <section className="mt-4 rounded border border-amber-200 bg-amber-50 p-3">
-      <h3 className="font-semibold">Vista previa de recálculo</h3>
-      <p className="text-sm">
+    <section className="mt-4 rounded-xl border border-yellow-400/30 bg-gray-950 p-4 text-gray-100 shadow-inner shadow-black/20">
+      <h3 className="font-semibold text-yellow-200">Vista previa de recálculo</h3>
+      <p className="mt-1 text-sm text-gray-300">
         Se reconstruirán {standingCount} posiciones actuales desde resultados oficiales.
       </p>
       <form
@@ -36,12 +36,12 @@ export function RecalculateSeasonForm({
         <input type="hidden" name="seasonId" value={seasonId} />
         <button
           disabled={processing}
-          className="rounded bg-amber-700 px-3 py-2 text-sm font-semibold text-white disabled:opacity-60"
+          className="rounded-lg bg-yellow-400 px-3 py-2 text-sm font-semibold text-gray-950 transition hover:bg-yellow-300 disabled:opacity-60"
         >
           {processing ? "Reconstruyendo..." : "Confirmar recálculo"}
         </button>
         {message && (
-          <p role="status" className="mt-2 text-sm">
+          <p role="status" className="mt-2 text-sm text-cyan-200">
             {message}
           </p>
         )}
