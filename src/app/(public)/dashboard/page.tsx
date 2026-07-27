@@ -32,17 +32,21 @@ export default async function DashboardPage() {
       orderBy: [{ position: "asc" }, { user: { nickname: "asc" } }],
       select: { position: true, totalPoints: true, user: { select: { nickname: true } } },
     }),
-    prisma.user.findFirst({ where: { id: session.user.id, deletedAt: null }, select: { nickname: true } }),
+    prisma.user.findFirst({
+      where: { id: session.user.id, deletedAt: null },
+      select: { nickname: true, favoriteTeam: { select: { name: true } } },
+    }),
   ]);
   const next = pending[0];
   const nickname = user?.nickname ?? "participante";
+  const favoriteTeamEmoji = user?.favoriteTeam?.name.split(" ")[0] ?? nickname.slice(0, 1).toUpperCase();
   const closesIn = next ? Math.max(0, Math.ceil((next.predictionClosesAt.getTime() - now.getTime()) / 60_000)) : null;
   const closeCountdown = closesIn === null ? null : closesIn >= 60 ? `${Math.floor(closesIn / 60)} h ${closesIn % 60} min` : `${closesIn} min`;
 
   return (
     <section className="w-full space-y-6">
       <div className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl sm:flex sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4"><div className="flex size-14 items-center justify-center rounded-full bg-blue-600 text-xl font-bold">{nickname.slice(0, 1).toUpperCase()}</div><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">Quiniela Nacional</p><h1 className="text-2xl font-bold">Hola, {nickname}</h1><p className="text-sm text-gray-400">Centro de control de tu quiniela.</p></div></div>
+        <div className="flex items-center gap-4"><div className="flex size-14 items-center justify-center rounded-full bg-blue-600 text-3xl" aria-label={`Equipo favorito: ${user?.favoriteTeam?.name ?? "sin equipo"}`}>{favoriteTeamEmoji}</div><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">Quiniela la Goleada</p><h1 className="text-2xl font-bold">Hola, {nickname}</h1><p className="text-sm text-gray-400">Centro de control de tu quiniela.</p></div></div>
         <p className="mt-4 text-sm text-gray-400 sm:mt-0 sm:text-right">{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos · {own?.partialCount ?? 0} parciales · <span className="text-cyan-300">+{own?.doublePoints ?? 0} bonus PJx2</span></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
