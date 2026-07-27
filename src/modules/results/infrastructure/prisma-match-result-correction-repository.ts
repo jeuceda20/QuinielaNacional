@@ -90,6 +90,7 @@ export class PrismaMatchResultCorrectionRepository implements MatchResultCorrect
         select: {
           userId: true,
           awardedPoints: true,
+          basePoints: true,
           scoreType: true,
           resultVersion: true,
           match: { select: { resultVersion: true, isDoublePoints: true } },
@@ -116,7 +117,7 @@ export class PrismaMatchResultCorrectionRepository implements MatchResultCorrect
         if (!total) continue;
         total.totalPoints += score.awardedPoints;
         if (score.match.isDoublePoints) {
-          total.doublePoints += score.awardedPoints;
+            total.doublePoints += score.awardedPoints - score.basePoints;
           if (score.scoreType === PredictionScoreType.EXACT) total.doubleExactCount += 1;
         }
         total.matchesScored += 1;

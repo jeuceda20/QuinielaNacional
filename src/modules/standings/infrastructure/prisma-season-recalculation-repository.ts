@@ -97,7 +97,7 @@ export class PrismaSeasonRecalculationRepository implements SeasonRecalculationR
         const total = totals.get(score.userId)!;
         total.totalPoints += score.awardedPoints;
         if (doubleMatchIds.has(score.matchId)) {
-          total.doublePoints += score.awardedPoints;
+            total.doublePoints += score.awardedPoints - score.basePoints;
           if (score.scoreType === PredictionScoreType.EXACT) total.doubleExactCount++;
         }
         total.matchesScored += 1;

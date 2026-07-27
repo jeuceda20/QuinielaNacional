@@ -63,7 +63,7 @@ try {
       const awayGoals = (roundIndex * 2 + matchIndex + 1) % 3;
       const match = await prisma.match.create({
         data: {
-          seasonId: season.id, roundId: round.id, homeTeamId: ring[matchIndex], awayTeamId: ring[11 - matchIndex],
+          seasonId: season.id, roundId: round.id, homeTeamId: ring[matchIndex]!, awayTeamId: ring[11 - matchIndex]!,
           scheduledAt, predictionClosesAt: new Date(scheduledAt.getTime() - 300_000),
           status: "PROCESSED", isDoublePoints: matchIndex === 0, officialHomeGoals: homeGoals,
           officialAwayGoals: awayGoals, processedAt: now, processedById: operator.id, resultVersion: 1,
@@ -93,7 +93,7 @@ try {
         });
       }
     }
-    ring = [ring[0], ring[11], ...ring.slice(1, 11)];
+    ring = [ring[0]!, ring[11]!, ...ring.slice(1, 11)];
   }
 
   const rows = [];
@@ -102,7 +102,7 @@ try {
     const totalPoints = scores.reduce((total, score) => total + score.awardedPoints, 0);
     const exactCount = scores.filter((score) => score.scoreType === "EXACT").length;
     const partialCount = scores.filter((score) => score.scoreType === "PARTIAL").length;
-    const doublePoints = scores.filter((score) => score.multiplier === 2).reduce((total, score) => total + score.awardedPoints, 0);
+    const doublePoints = scores.filter((score) => score.multiplier === 2).reduce((total, score) => total + score.awardedPoints - score.basePoints, 0);
     const doubleExactCount = scores.filter((score) => score.multiplier === 2 && score.scoreType === "EXACT").length;
     rows.push({ user, totalPoints, exactCount, partialCount, doublePoints, doubleExactCount, matchCount: scores.length });
   }

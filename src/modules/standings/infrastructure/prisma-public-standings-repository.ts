@@ -21,6 +21,7 @@ export class PrismaPublicStandingsRepository implements PublicStandingsRepositor
             position: true,
             previousPosition: true,
             totalPoints: true,
+            doublePoints: true,
             exactCount: true,
             doubleExactCount: true,
             partialCount: true,
@@ -36,6 +37,7 @@ export class PrismaPublicStandingsRepository implements PublicStandingsRepositor
       exactCount: standing.exactCount,
       doubleExactCount: standing.doubleExactCount,
       totalPoints: standing.totalPoints,
+      doublePoints: standing.doublePoints,
       previousPosition: standing.previousPosition,
     }));
   }

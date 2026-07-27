@@ -4,6 +4,7 @@ export type PublicStanding = Readonly<{
   partialCount: number;
   exactCount: number;
   doubleExactCount: number;
+  doublePoints: number;
   totalPoints: number;
   previousPosition: number | null;
 }>;

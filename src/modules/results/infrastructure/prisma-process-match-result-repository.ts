@@ -113,6 +113,7 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
           select: {
             userId: true,
             awardedPoints: true,
+            basePoints: true,
             scoreType: true,
             match: { select: { isDoublePoints: true } },
           },
@@ -137,7 +138,7 @@ export class PrismaProcessMatchResultRepository implements ProcessMatchResultRep
           if (!total) continue;
           total.totalPoints += score.awardedPoints;
           if (score.match.isDoublePoints) {
-            total.doublePoints += score.awardedPoints;
+            total.doublePoints += score.awardedPoints - score.basePoints;
             if (score.scoreType === PredictionScoreType.EXACT) total.doubleExactCount += 1;
           }
           total.matchesScored += 1;

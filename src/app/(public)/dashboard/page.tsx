@@ -43,7 +43,7 @@ export default async function DashboardPage() {
     <section className="w-full space-y-6">
       <div className="rounded-3xl border border-gray-800 bg-gray-900 p-6 shadow-xl sm:flex sm:items-center sm:justify-between">
         <div className="flex items-center gap-4"><div className="flex size-14 items-center justify-center rounded-full bg-blue-600 text-xl font-bold">{nickname.slice(0, 1).toUpperCase()}</div><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-300">Quiniela Nacional</p><h1 className="text-2xl font-bold">Hola, {nickname}</h1><p className="text-sm text-gray-400">Centro de control de tu quiniela.</p></div></div>
-        <p className="mt-4 text-sm text-gray-400 sm:mt-0 sm:text-right">{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos · {own?.partialCount ?? 0} parciales · <span className="text-cyan-300">{own?.doublePoints ?? 0} puntos PJx2</span></p>
+        <p className="mt-4 text-sm text-gray-400 sm:mt-0 sm:text-right">{own?.totalPoints ?? 0} puntos · {own?.exactCount ?? 0} exactos · {own?.partialCount ?? 0} parciales · <span className="text-cyan-300">+{own?.doublePoints ?? 0} bonus PJx2</span></p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
         <article className="rounded-2xl border border-gray-800 bg-gray-900 p-5 shadow-xl"><strong>Posición actual</strong><p className="text-2xl">{own?.position ?? "—"}</p><p className="text-sm text-gray-400">{own ? getStandingTrend({ currentPosition: own.position, previousPosition: own.previousPosition }) : "NEW"}</p></article>

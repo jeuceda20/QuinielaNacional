@@ -23,7 +23,7 @@ export default async function StandingsPage() {
             <table className="min-w-full text-left text-sm">
               <thead className="bg-gray-950 text-gray-300">
                 <tr>
-                  {["Posición", "Nickname", "Exactos", "Exactos PJx2", "Parciales", "Puntos", "Tendencia"].map(
+                  {["Posición", "Nickname", "Exactos", "Exactos PJx2", "Parciales", "Bonus PJx2", "Puntos", "Tendencia"].map(
                     (label) => (
                       <th key={label} className="px-4 py-3">
                         {label}
@@ -40,6 +40,7 @@ export default async function StandingsPage() {
                     <td className="px-4 py-3">{standing.exactCount}</td>
                     <td className="px-4 py-3 text-cyan-300">{standing.doubleExactCount}</td>
                     <td className="px-4 py-3">{standing.partialCount}</td>
+                    <td className="px-4 py-3 text-cyan-300">{standing.doublePoints > 0 ? `+${standing.doublePoints}` : "—"}</td>
                     <td className="px-4 py-3">{standing.totalPoints}</td>
                     <td className="px-4 py-3">
                       {trendLabel(
@@ -71,12 +72,12 @@ export default async function StandingsPage() {
                   </span>
                 </div>
                 <p className="mt-2 text-sm">
-                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos PJx2 ·{" "}
-                  {standing.partialCount} parciales
+                  {standing.totalPoints} puntos · {standing.exactCount} exactos · {standing.doubleExactCount} exactos PJx2 · {standing.partialCount} parciales · bonus PJx2 +{standing.doublePoints}
                 </p>
               </article>
             ))}
           </div>
+          <p className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3 text-sm text-cyan-100">PJx2 duplica la puntuación del partido de la jornada. “Bonus PJx2” muestra solo el extra añadido a los puntos base.</p>
         </>
       ) : (
         <p role="status" className="rounded-2xl border border-gray-800 bg-gray-900 p-6 text-gray-300 shadow-xl">
